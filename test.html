@@ -1,1 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Интерактивная Мнемосхема</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #222; overflow: hidden; font-family: Arial, sans-serif;
+        }
+        .schema-container {
+            display: flex; justify-content: center; align-items: center;
+            width: 100vw; height: 100vh; background: #333;
+        }
+        #main-svg {
+            width: 100%; height: 100%; max-width: 1200px; max-height: 800px;
+            background-color: #e8e4d9; /* Цвет панели */
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        /* Стили для интерактивных элементов */
+        .interactive {
+            cursor: pointer;
+            transition: stroke 0.2s, fill 0.2s;
+        }
+        .interactive:hover {
+            stroke-width: 8 !important;
+            filter: brightness(1.1);
+        }
+        .hint {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(255,255,255,0.95); padding: 12px;
+            border-radius: 6px; font-size: 14px; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
 
+<div class="schema-container">
+    <div class="hint">🔴 Кликните по элементу, чтобы переключить состояние</div>
+    
+    <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        
+        <!-- Фон панели -->
+        <rect width="100%" height="100%" fill="#e8e4d9" />
+
+        <!-- === ЛИНИИ (не интерактивные) === -->
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 164.54343,244.62323 V 154.1044" />
+        <path style="fill:none;stroke:#887777;stroke-width:4.08531;" d="M 811.4039,156.07165 H 513.60281" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.08867,156.67352 V 79.258369" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 368.94189,155.25733 V 77.842176" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.60586,405.35618 V 327.94103" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 369.45908,403.93999 V 326.52484" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 612.21551,158.87568 V 81.460524" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 747.06873,157.45949 V 80.044331" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 612.7327,407.55834 V 330.14319" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 747.58592,406.14215 V 328.727" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 162.968,407.35115 H 457.88286" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 512.41457,407.35115 H 809.17265" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 809.17265,407.35115 V 297.67969" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 810.09426,246.06959 V 154.8303" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 461.72608,156.67352 H 164.968" />
+        <path style="fill:none;stroke:#887777;stroke-width:6.14456;" d="M 165.12478,297.38789 V 409.50793" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 261.97372,447.70136 v -40.4039" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 342.12986,446.39801 V 156.67352" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 730.83589,445.13712 V 408.27276" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 649.57752,446.98033 V 154.8303" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 259.89372,498.59044 v 63.59101" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 342.83852,495.82561 v 64.51262" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 649.51163,497.22944 v 63.59101" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 732.45643,494.46461 v 64.51262" />
+
+        <!-- === ИНТЕРАКТИВНЫЕ ЭЛЕМЕНТЫ === -->
+        <!-- Верхний ряд -->
+        <rect id="auto-top-left" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" width="50" height="50" x="138.93347" y="246.12213" onclick="toggleColor(this)" />
+        <rect id="auto-top-right" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" width="50" height="50" x="782.66278" y="246.60335" onclick="toggleColor(this)" />
+        
+        <!-- Средний ряд -->
+        <rect id="auto-mid-1" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" width="50" height="50" x="463.07034" y="132.7632" onclick="toggleColor(this)" />
+        <rect id="auto-mid-2" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" width="50" height="50" x="462.21902" y="379.5723" onclick="toggleColor(this)" />
+
+        <!-- Нижний ряд -->
+        <rect id="auto-bot-1" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" width="50" height="50" x="234.94316" y="445.90802" onclick="toggleColor(this)" />
+        <rect id="auto-bot-2" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" width="50" height="50" x="316.29105" y="445.4162" onclick="toggleColor(this)" />
+        <rect id="auto-bot-3" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" width="50" height="50" x="624.5611" y="444.54703" onclick="toggleColor(this)" />
+        <rect id="auto-bot-4" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" width="50" height="50" x="705.909" y="444.05521" onclick="toggleColor(this)" />
+
+        <!-- Круги (трансформаторы/лампы) - верх -->
+        <ellipse id="trans-1" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" cx="233.16707" cy="60.365387" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+        <ellipse id="trans-2" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" cx="369.26044" cy="61.441719" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+        <ellipse id="trans-3" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" cx="611.60333" cy="60.068848" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+        <ellipse id="trans-4" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" cx="747.69672" cy="61.14518" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+        
+        <!-- Круги - середина -->
+        <ellipse id="lamp-1" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" cx="233.81532" cy="309.51337" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+        <ellipse id="lamp-2" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" cx="369.90869" cy="310.58969" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+        <ellipse id="lamp-3" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" cx="612.25159" cy="309.21683" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+        <ellipse id="lamp-4" class="interactive" style="fill:none;stroke:#887777;stroke-width:6;" cx="748.34497" cy="310.29315" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+
+        <!-- Большие круги внизу -->
+        <circle id="motor-1" class="interactive" style="fill:none;stroke:#887777;stroke-width:7.16141;" cx="300.43497" cy="548.81812" r="37.666065" onclick="toggleColor(this)" />
+        <circle id="motor-2" class="interactive" style="fill:none;stroke:#887777;stroke-width:7.16141;" cx="690.05292" cy="547.45709" r="37.666065" onclick="toggleColor(this)" />
+
+    </svg>
+</div>
+
+<script>
+    // Исправленная функция переключения цвета
+    function toggleColor(element) {
+        // Получаем текущий цвет через style (работает с инлайн-стилями)
+        const currentStroke = element.style.stroke;
+        
+        // Серый цвет в твоем SVG: #887777
+        // Красный цвет для включения: #cc0000
+        
+        if (currentStroke === 'rgb(136, 119, 119)' || currentStroke === '#887777') {
+            // ВКЛЮЧАЕМ (красный)
+            element.style.stroke = '#cc0000';
+            element.style.fill = '#ff9999'; // Легкая заливка для наглядности
+            element.style.strokeWidth = '8';
+        } else {
+            // ОТКЛЮЧАЕМ (серый)
+            element.style.stroke = '#887777';
+            element.style.fill = 'none';
+            element.style.strokeWidth = '6'; // Возвращаем исходную толщину
+        }
+    }
+</script>
+
+</body>
+</html>
