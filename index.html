@@ -18,15 +18,21 @@
             background-color: #e8e4d9; /* Цвет панели */
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        /* Стили для интерактивных элементов */
+        
+        /* === КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ === */
         .interactive {
             cursor: pointer;
             transition: stroke 0.2s, fill 0.2s;
+            /* Это позволяет кликать даже если внутри элемента нет заливки (fill:none) */
+            pointer-events: visiblePainted; 
         }
+        
+        /* При наведении делаем элемент чуть ярче */
         .interactive:hover {
+            filter: brightness(1.2);
             stroke-width: 8 !important;
-            filter: brightness(1.1);
         }
+
         .hint {
             position: absolute; top: 10px; left: 10px;
             background: rgba(255,255,255,0.95); padding: 12px;
@@ -38,7 +44,7 @@
 <body>
 
 <div class="schema-container">
-    <div class="hint">🔴 Кликните по элементу, чтобы переключить состояние</div>
+    <div class="hint">🔴 Кликните в любом месте элемента (квадрата/круга)</div>
     
     <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
         
@@ -46,6 +52,7 @@
         <rect width="100%" height="100%" fill="#e8e4d9" />
 
         <!-- === ЛИНИИ (не интерактивные) === -->
+        <!-- Я оставил их как есть, они не мешают кликам, так как лежат под элементами или рядом -->
         <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 164.54343,244.62323 V 154.1044" />
         <path style="fill:none;stroke:#887777;stroke-width:4.08531;" d="M 811.4039,156.07165 H 513.60281" />
         <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.08867,156.67352 V 79.258369" />
@@ -106,24 +113,22 @@
 </div>
 
 <script>
-    // Исправленная функция переключения цвета
     function toggleColor(element) {
-        // Получаем текущий цвет через style (работает с инлайн-стилями)
+        // Проверяем текущий цвет обводки
+        // Браузер может вернуть rgb(136, 119, 119) вместо #887777
         const currentStroke = element.style.stroke;
-        
-        // Серый цвет в твоем SVG: #887777
-        // Красный цвет для включения: #cc0000
-        
-        if (currentStroke === 'rgb(136, 119, 119)' || currentStroke === '#887777') {
-            // ВКЛЮЧАЕМ (красный)
+        const isGray = currentStroke.includes('136, 119, 119') || currentStroke === '#887777';
+
+        if (isGray) {
+            // ВКЛЮЧАЕМ (Красный)
             element.style.stroke = '#cc0000';
-            element.style.fill = '#ff9999'; // Легкая заливка для наглядности
+            element.style.fill = '#ffaaaa'; // Светло-красная заливка, чтобы было видно нажатие по центру
             element.style.strokeWidth = '8';
         } else {
-            // ОТКЛЮЧАЕМ (серый)
+            // ОТКЛЮЧАЕМ (Серый)
             element.style.stroke = '#887777';
-            element.style.fill = 'none';
-            element.style.strokeWidth = '6'; // Возвращаем исходную толщину
+            element.style.fill = 'none'; // Убираем заливку
+            element.style.strokeWidth = '6'; // Возвращаем толщину
         }
     }
 </script>
