@@ -2,136 +2,143 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Интерактивная Мнемосхема</title>
+    <!-- Разрешаем зум, если пользователю нужно рассмотреть детали -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адаптивная Мнемосхема</title>
     <style>
         body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #222; overflow: hidden; font-family: Arial, sans-serif;
-        }
-        .schema-container {
-            display: flex; justify-content: center; align-items: center;
-            width: 100vw; height: 100vh; background: #333;
-        }
-        #main-svg {
-            width: 100%; height: 100%; max-width: 1200px; max-height: 800px;
-            background-color: #e8e4d9;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-        
-        /* === ИСПРАВЛЕНИЕ КЛИКА === */
-        .interactive {
-            cursor: pointer;
-            transition: stroke 0.2s, fill 0.2s;
-            /* Разрешаем клики по видимой заливке (даже если она прозрачная) */
-            pointer-events: visibleFill; 
-        }
-        
-        .interactive:hover {
-            filter: brightness(1.1);
-            stroke-width: 8 !important;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #222; /* Темный фон за пределами схемы */
+            overflow: auto; /* Разрешаем скролл, если схема очень большая */
+            font-family: Arial, sans-serif;
         }
 
-        .hint {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(255,255,255,0.95); padding: 12px;
-            border-radius: 6px; font-size: 14px; z-index: 100;
+        .schema-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Контейнер занимает минимум весь экран */
+            padding: 10px; /* Небольшой отступ от краев экрана */
+            box-sizing: border-box;
+        }
+
+        #main-svg {
+            /* Схема занимает доступное место, но не больше своего реального размера */
+            width: 100%;
+            height: auto; /* Высота подстраивается автоматически */
+            max-width: 1200px; /* Ограничение ширины для ПК */
+            
+            /* Фон панели */
+            background-color: #e8e4d9; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            
+            /* Важно: сохраняет пропорции при масштабировании */
+            aspect-ratio: 1000 / 600; /* Замени 1000/600 на свои размеры из Inkscape! */
+        }
+
+        /* Стили для интерактивных элементов */
+        .interactive {
+            cursor: pointer;
+            transition: fill 0.2s ease, stroke 0.2s ease;
+        }
+
+        /* Панель управления (плавающая) */
+        .control-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            .control-panel {
+                top: auto;
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="schema-container">
-    <div class="hint">🔴 Клик работает по всей площади элемента!</div>
-    
-    <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-        
-        <!-- Фон панели -->
-        <rect width="100%" height="100%" fill="#e8e4d9" />
+    <div class="control-panel">
+        <b>Управление:</b> Клик по элементу меняет цвет.<br>
+        <small>Схема адаптируется под экран.</small>
+    </div>
 
-        <!-- === ЛИНИИ (не интерактивные) === -->
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 164.54343,244.62323 V 154.1044" />
-        <path style="fill:none;stroke:#887777;stroke-width:4.08531;" d="M 811.4039,156.07165 H 513.60281" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.08867,156.67352 V 79.258369" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 368.94189,155.25733 V 77.842176" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.60586,405.35618 V 327.94103" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 369.45908,403.93999 V 326.52484" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 612.21551,158.87568 V 81.460524" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 747.06873,157.45949 V 80.044331" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 612.7327,407.55834 V 330.14319" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 747.58592,406.14215 V 328.727" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 162.968,407.35115 H 457.88286" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 512.41457,407.35115 H 809.17265" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 809.17265,407.35115 V 297.67969" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 810.09426,246.06959 V 154.8303" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 461.72608,156.67352 H 164.968" />
-        <path style="fill:none;stroke:#887777;stroke-width:6.14456;" d="M 165.12478,297.38789 V 409.50793" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 261.97372,447.70136 v -40.4039" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 342.12986,446.39801 V 156.67352" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 730.83589,445.13712 V 408.27276" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 649.57752,446.98033 V 154.8303" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 259.89372,498.59044 v 63.59101" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 342.83852,495.82561 v 64.51262" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 649.51163,497.22944 v 63.59101" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 732.45643,494.46461 v 64.51262" />
+    <div class="schema-container">
+        <!-- 
+           ВАЖНО: 
+           1. viewBox должен соответствовать размерам твоего холста в Inkscape.
+           2. aspect-ratio в CSS выше тоже должен совпадать с этими цифрами.
+        -->
+        <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
+            
+            <!-- === ВСТАВЬ СЮДА КОД ИЗ INKSCAPE === -->
+            
+            <!-- Пример фона -->
+            <rect width="100%" height="100%" fill="#e8e4d9" />
 
-        <!-- === ИНТЕРАКТИВНЫЕ ЭЛЕМЕНТЫ === -->
-        <!-- ВАЖНО: Заменил fill:none на fill:transparent для всех элементов ниже -->
-        
-        <!-- Верхний ряд -->
-        <rect id="auto-top-left" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" width="50" height="50" x="138.93347" y="246.12213" onclick="toggleColor(this)" />
-        <rect id="auto-top-right" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" width="50" height="50" x="782.66278" y="246.60335" onclick="toggleColor(this)" />
-        
-        <!-- Средний ряд -->
-        <rect id="auto-mid-1" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" width="50" height="50" x="463.07034" y="132.7632" onclick="toggleColor(this)" />
-        <rect id="auto-mid-2" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" width="50" height="50" x="462.21902" y="379.5723" onclick="toggleColor(this)" />
+            <!-- Пример шины -->
+            <line x1="50" y1="100" x2="950" y2="100" stroke="#333" stroke-width="4" />
+            <line x1="50" y1="300" x2="950" y2="300" stroke="#333" stroke-width="4" />
 
-        <!-- Нижний ряд -->
-        <rect id="auto-bot-1" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" width="50" height="50" x="234.94316" y="445.90802" onclick="toggleColor(this)" />
-        <rect id="auto-bot-2" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" width="50" height="50" x="316.29105" y="445.4162" onclick="toggleColor(this)" />
-        <rect id="auto-bot-3" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" width="50" height="50" x="624.5611" y="444.54703" onclick="toggleColor(this)" />
-        <rect id="auto-bot-4" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" width="50" height="50" x="705.909" y="444.05521" onclick="toggleColor(this)" />
+            <!-- Пример автомата Q1 -->
+            <g id="auto-q1" class="interactive" onclick="toggleState('auto-q1')">
+                <rect x="200" y="80" width="40" height="40" fill="#cc0000" stroke="#333" stroke-width="2" />
+                <text x="210" y="105" font-size="12" pointer-events="none" fill="white">Q1</text>
+            </g>
 
-        <!-- Круги (трансформаторы/лампы) - верх -->
-        <ellipse id="trans-1" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" cx="233.16707" cy="60.365387" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
-        <ellipse id="trans-2" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" cx="369.26044" cy="61.441719" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
-        <ellipse id="trans-3" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" cx="611.60333" cy="60.068848" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
-        <ellipse id="trans-4" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" cx="747.69672" cy="61.14518" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
-        
-        <!-- Круги - середина -->
-        <ellipse id="lamp-1" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" cx="233.81532" cy="309.51337" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
-        <ellipse id="lamp-2" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" cx="369.90869" cy="310.58969" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
-        <ellipse id="lamp-3" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" cx="612.25159" cy="309.21683" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
-        <ellipse id="lamp-4" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:6;" cx="748.34497" cy="310.29315" rx="18.432178" ry="17.971375" onclick="toggleColor(this)" />
+            <!-- Пример лампы L1 -->
+            <g id="lamp-l1" class="interactive" onclick="toggleState('lamp-l1')">
+                <circle cx="300" cy="100" r="15" fill="#cccccc" stroke="#333" stroke-width="2" />
+                <text x="290" y="125" font-size="12" pointer-events="none">L1</text>
+            </g>
+            
+             <!-- Пример автомата Q2 (для теста) -->
+            <g id="auto-q2" class="interactive" onclick="toggleState('auto-q2')">
+                <rect x="500" y="280" width="40" height="40" fill="#cc0000" stroke="#333" stroke-width="2" />
+                <text x="510" y="305" font-size="12" pointer-events="none" fill="white">Q2</text>
+            </g>
 
-        <!-- Большие круги внизу -->
-        <circle id="motor-1" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:7.16141;" cx="300.43497" cy="548.81812" r="37.666065" onclick="toggleColor(this)" />
-        <circle id="motor-2" class="interactive" style="fill:transparent;stroke:#887777;stroke-width:7.16141;" cx="690.05292" cy="547.45709" r="37.666065" onclick="toggleColor(this)" />
+            <!-- === КОНЕЦ ВСТАВКИ === -->
 
-    </svg>
-</div>
+        </svg>
+    </div>
 
-<script>
-    function toggleColor(element) {
-        // Проверяем текущий цвет обводки
-        const currentStroke = element.style.stroke;
-        // Серый цвет может быть в формате rgb или hex
-        const isGray = currentStroke.includes('136, 119, 119') || currentStroke === '#887777';
+    <script>
+        // Функция переключения цвета
+        function toggleState(id) {
+            // Ищем группу (g) или конкретный элемент внутри неё
+            const group = document.getElementById(id);
+            if (!group) return;
 
-        if (isGray) {
-            // ВКЛЮЧАЕМ (Красный)
-            element.style.stroke = '#cc0000';
-            element.style.fill = '#ffaaaa'; // Светло-красная заливка
-            element.style.strokeWidth = '8';
-        } else {
-            // ОТКЛЮЧАЕМ (Серый)
-            element.style.stroke = '#887777';
-            element.style.fill = 'transparent'; // ВОЗВРАЩАЕМ ПРОЗРАЧНУЮ ЗАЛИВКУ (важно!)
-            element.style.strokeWidth = '6';
+            // Находим прямоугольник или круг внутри группы
+            const shape = group.querySelector('rect') || group.querySelector('circle');
+            if (!shape) return;
+
+            const currentFill = shape.getAttribute('fill');
+            
+            // Логика: Красный <-> Серый
+            if (currentFill === '#cc0000' || currentFill === 'red') {
+                shape.setAttribute('fill', '#cccccc'); // Серый (Выкл)
+                shape.setAttribute('stroke', '#666');
+            } else {
+                shape.setAttribute('fill', '#cc0000'); // Красный (Вкл)
+                shape.setAttribute('stroke', '#333');
+            }
         }
-    }
-</script>
-
+    </script>
 </body>
 </html>
+
