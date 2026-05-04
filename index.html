@@ -2,143 +2,100 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <!-- Разрешаем зум, если пользователю нужно рассмотреть детали -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Адаптивная Мнемосхема</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Интерактивная Мнемосхема</title>
     <style>
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #222; /* Темный фон за пределами схемы */
-            overflow: auto; /* Разрешаем скролл, если схема очень большая */
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #222; 
             font-family: Arial, sans-serif;
+            overflow: hidden; /* Убираем скролл */
         }
-
         .schema-container {
-            display: flex;
-            justify-content: center;
+            display: flex; 
+            justify-content: center; 
             align-items: center;
-            min-height: 100vh; /* Контейнер занимает минимум весь экран */
-            padding: 10px; /* Небольшой отступ от краев экрана */
+            width: 100vw; 
+            height: 100vh; 
+            background: #333;
+            padding: 10px; /* Небольшой отступ, чтобы схема не прилипала к краям */
             box-sizing: border-box;
         }
-
+        
         #main-svg {
-            /* Схема занимает доступное место, но не больше своего реального размера */
+            /* Ключевые настройки для адаптивности без обрезки */
             width: 100%;
-            height: auto; /* Высота подстраивается автоматически */
-            max-width: 1200px; /* Ограничение ширины для ПК */
+            height: 100%;
+            max-width: 100%; /* Разрешаем схеме быть широкой */
+            max-height: 100%; /* Разрешаем схеме быть высокой */
             
-            /* Фон панели */
-            background-color: #e8e4d9; 
+            background-color: #e8e4d9;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             
-            /* Важно: сохраняет пропорции при масштабировании */
-            aspect-ratio: 1000 / 600; /* Замени 1000/600 на свои размеры из Inkscape! */
-        }
-
-        /* Стили для интерактивных элементов */
-        .interactive {
-            cursor: pointer;
-            transition: fill 0.2s ease, stroke 0.2s ease;
-        }
-
-        /* Панель управления (плавающая) */
-        .control-panel {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 100;
-            font-size: 14px;
+            /* Сохраняем пропорции, центрируем и вписываем целиком */
+            object-fit: contain; 
         }
         
-        @media (max-width: 600px) {
-            .control-panel {
-                top: auto;
-                bottom: 10px;
-                right: 10px;
-                left: 10px;
-                text-align: center;
-            }
+        /* Стили элементов */
+        .interactive {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .state-off {
+            stroke: #887777 !important;
+            fill: transparent !important;
+            stroke-width: 6px;
+        }
+
+        .state-on {
+            stroke: #cc0000 !important;
+            fill: rgba(255, 0, 0, 0.15) !important;
+            stroke-width: 8px;
+            filter: drop-shadow(0 0 4px rgba(255,0,0,0.4));
+        }
+
+        .interactive:hover {
+            stroke: #ff4444 !important;
+            stroke-width: 10px !important;
+        }
+
+        .hint {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(255,255,255,0.95); padding: 10px;
+            border-radius: 6px; font-size: 14px; z-index: 100;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="control-panel">
-        <b>Управление:</b> Клик по элементу меняет цвет.<br>
-        <small>Схема адаптируется под экран.</small>
-    </div>
+<div class="schema-container">
+    <div class="hint">🔴 Схема адаптирована под экран</div>
+    
+    <!-- ВАЖНО: Проверь viewBox! Он должен быть равен размеру твоего холста в Inkscape -->
+    <!-- Если схема обрезается, возможно, в Inkscape холст больше, чем рисунок. -->
+    <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        
+        <rect width="100%" height="100%" fill="#e8e4d9" />
 
-    <div class="schema-container">
-        <!-- 
-           ВАЖНО: 
-           1. viewBox должен соответствовать размерам твоего холста в Inkscape.
-           2. aspect-ratio в CSS выше тоже должен совпадать с этими цифрами.
-        -->
-        <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
-            
-            <!-- === ВСТАВЬ СЮДА КОД ИЗ INKSCAPE === -->
-            
-            <!-- Пример фона -->
-            <rect width="100%" height="100%" fill="#e8e4d9" />
-
-            <!-- Пример шины -->
-            <line x1="50" y1="100" x2="950" y2="100" stroke="#333" stroke-width="4" />
-            <line x1="50" y1="300" x2="950" y2="300" stroke="#333" stroke-width="4" />
-
-            <!-- Пример автомата Q1 -->
-            <g id="auto-q1" class="interactive" onclick="toggleState('auto-q1')">
-                <rect x="200" y="80" width="40" height="40" fill="#cc0000" stroke="#333" stroke-width="2" />
-                <text x="210" y="105" font-size="12" pointer-events="none" fill="white">Q1</text>
-            </g>
-
-            <!-- Пример лампы L1 -->
-            <g id="lamp-l1" class="interactive" onclick="toggleState('lamp-l1')">
-                <circle cx="300" cy="100" r="15" fill="#cccccc" stroke="#333" stroke-width="2" />
-                <text x="290" y="125" font-size="12" pointer-events="none">L1</text>
-            </g>
-            
-             <!-- Пример автомата Q2 (для теста) -->
-            <g id="auto-q2" class="interactive" onclick="toggleState('auto-q2')">
-                <rect x="500" y="280" width="40" height="40" fill="#cc0000" stroke="#333" stroke-width="2" />
-                <text x="510" y="305" font-size="12" pointer-events="none" fill="white">Q2</text>
-            </g>
-
-            <!-- === КОНЕЦ ВСТАВКИ === -->
-
-        </svg>
-    </div>
-
-    <script>
-        // Функция переключения цвета
-        function toggleState(id) {
-            // Ищем группу (g) или конкретный элемент внутри неё
-            const group = document.getElementById(id);
-            if (!group) return;
-
-            // Находим прямоугольник или круг внутри группы
-            const shape = group.querySelector('rect') || group.querySelector('circle');
-            if (!shape) return;
-
-            const currentFill = shape.getAttribute('fill');
-            
-            // Логика: Красный <-> Серый
-            if (currentFill === '#cc0000' || currentFill === 'red') {
-                shape.setAttribute('fill', '#cccccc'); // Серый (Выкл)
-                shape.setAttribute('stroke', '#666');
-            } else {
-                shape.setAttribute('fill', '#cc0000'); // Красный (Вкл)
-                shape.setAttribute('stroke', '#333');
-            }
-        }
-    </script>
-</body>
-</html>
-
+        <!-- === ЛИНИИ === -->
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 164.54343,244.62323 V 154.1044" />
+        <path style="fill:none;stroke:#887777;stroke-width:4.08531;" d="M 811.4039,156.07165 H 513.60281" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.08867,156.67352 V 79.258369" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 368.94189,155.25733 V 77.842176" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.60586,405.35618 V 327.94103" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 369.45908,403.93999 V 326.52484" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 612.21551,158.87568 V 81.460524" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 747.06873,157.45949 V 80.044331" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 612.7327,407.55834 V 330.14319" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 747.58592,406.14215 V 328.727" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 162.968,407.35115 H 457.88286" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 512.41457,407.35115 H 809.17265" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 809.17265,407.35115 V 297.67969" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 810.09426,246.06959 V 154.8303" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 461.72608,156.67352 H 164.968" />
+        <path style="fill:none;stroke:#887777;stroke-width:6.14456;" d="M 165.12478,297.38789 V 409.50793" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 261.97372,447.70136 v -40.4039" />
+        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 342.12986,446.39801 V 156.67352" />
+        <path style="fill:none;stroke:#88777
