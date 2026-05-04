@@ -3,67 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Интерактивная Мнемосхема</title>
+    <title>Мнемосхема (Без эффектов)</title>
     <style>
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #222; 
-            font-family: Arial, sans-serif;
-            overflow: hidden; /* Убираем скролл */
-        }
-        .schema-container {
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            width: 100vw; 
-            height: 100vh; 
-            background: #333;
-            padding: 10px; /* Небольшой отступ, чтобы схема не прилипала к краям */
+        * {
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
-        
-        #main-svg {
-            /* Ключевые настройки для адаптивности без обрезки */
+        body, html {
+            margin: 0;
+            padding: 0;
             width: 100%;
             height: 100%;
-            max-width: 100%; /* Разрешаем схеме быть широкой */
-            max-height: 100%; /* Разрешаем схеме быть высокой */
-            
-            background-color: #e8e4d9;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            
-            /* Сохраняем пропорции, центрируем и вписываем целиком */
-            object-fit: contain; 
+            background-color: #1a1a1a;
+            overflow: hidden;
+            font-family: sans-serif;
+            user-select: none;
         }
-        
-        /* Стили элементов */
+        .schema-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            padding: 10px;
+        }
+        #main-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            max-height: 800px;
+            background-color: #e8e4d9;
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+            border-radius: 4px;
+            aspect-ratio: 1000 / 600;
+            touch-action: none; 
+        }
+
+        /* === ЛИНИИ === */
+        .pipe {
+            fill: none;
+            stroke: #555555;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            pointer-events: none;
+        }
+
+        /* === ИНТЕРАКТИВНЫЕ ЭЛЕМЕНТЫ === */
         .interactive {
             cursor: pointer;
-            transition: all 0.2s ease;
+            fill: transparent;
+            stroke: #555555;
+            stroke-width: 6;
+            /* Никаких анимаций и переходов */
         }
 
-        .state-off {
-            stroke: #887777 !important;
-            fill: transparent !important;
-            stroke-width: 6px;
+        /* Активное состояние (ВКЛ) */
+        .interactive.active {
+            stroke: #cc0000;
+            fill: #ffcccc;
+            stroke-width: 7;
         }
 
-        .state-on {
-            stroke: #cc0000 !important;
-            fill: rgba(255, 0, 0, 0.15) !important;
-            stroke-width: 8px;
-            filter: drop-shadow(0 0 4px rgba(255,0,0,0.4));
-        }
-
-        .interactive:hover {
-            stroke: #ff4444 !important;
-            stroke-width: 10px !important;
+        /* Текст */
+        .label {
+            pointer-events: none;
+            font-size: 11px;
+            font-weight: bold;
+            fill: #333;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            user-select: none;
         }
 
         .hint {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(255,255,255,0.95); padding: 10px;
-            border-radius: 6px; font-size: 14px; z-index: 100;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            z-index: 100;
             pointer-events: none;
         }
     </style>
@@ -71,31 +93,111 @@
 <body>
 
 <div class="schema-container">
-    <div class="hint">🔴 Схема адаптирована под экран</div>
+    <div class="hint">⚡ Только клик меняет цвет</div>
     
-    <!-- ВАЖНО: Проверь viewBox! Он должен быть равен размеру твоего холста в Inkscape -->
-    <!-- Если схема обрезается, возможно, в Inkscape холст больше, чем рисунок. -->
-    <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-        
+    <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
         <rect width="100%" height="100%" fill="#e8e4d9" />
 
-        <!-- === ЛИНИИ === -->
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 164.54343,244.62323 V 154.1044" />
-        <path style="fill:none;stroke:#887777;stroke-width:4.08531;" d="M 811.4039,156.07165 H 513.60281" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.08867,156.67352 V 79.258369" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 368.94189,155.25733 V 77.842176" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 234.60586,405.35618 V 327.94103" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 369.45908,403.93999 V 326.52484" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 612.21551,158.87568 V 81.460524" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 747.06873,157.45949 V 80.044331" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 612.7327,407.55834 V 330.14319" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 747.58592,406.14215 V 328.727" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 162.968,407.35115 H 457.88286" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 512.41457,407.35115 H 809.17265" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 809.17265,407.35115 V 297.67969" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 810.09426,246.06959 V 154.8303" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 461.72608,156.67352 H 164.968" />
-        <path style="fill:none;stroke:#887777;stroke-width:6.14456;" d="M 165.12478,297.38789 V 409.50793" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="m 261.97372,447.70136 v -40.4039" />
-        <path style="fill:none;stroke:#887777;stroke-width:6;" d="M 342.12986,446.39801 V 156.67352" />
-        <path style="fill:none;stroke:#88777
+        <!-- ЛИНИИ -->
+        <path class="pipe" d="M 164.5,244.6 V 154.1" />
+        <path class="pipe" d="M 811.4,156.0 H 513.6" />
+        <path class="pipe" d="M 234.0,156.6 V 79.2" />
+        <path class="pipe" d="M 368.9,155.2 V 77.8" />
+        <path class="pipe" d="M 234.6,405.3 V 327.9" />
+        <path class="pipe" d="M 369.4,403.9 V 326.5" />
+        <path class="pipe" d="M 612.2,158.8 V 81.4" />
+        <path class="pipe" d="M 747.0,157.4 V 80.0" />
+        <path class="pipe" d="M 612.7,407.5 V 330.1" />
+        <path class="pipe" d="M 747.5,406.1 V 328.7" />
+        <path class="pipe" d="M 162.9,407.3 H 457.8" />
+        <path class="pipe" d="M 512.4,407.3 H 809.1" />
+        <path class="pipe" d="M 809.1,407.3 V 297.6" />
+        <path class="pipe" d="M 810.0,246.0 V 154.8" />
+        <path class="pipe" d="M 461.7,156.6 H 164.9" />
+        <path class="pipe" d="M 165.1,297.3 V 409.5" />
+        <path class="pipe" d="M 261.9,447.7 v -40.4" />
+        <path class="pipe" d="M 342.1,446.3 V 156.6" />
+        <path class="pipe" d="M 730.8,445.1 V 408.2" />
+        <path class="pipe" d="M 649.5,446.9 V 154.8" />
+        <path class="pipe" d="M 259.8,498.5 v 63.5" />
+        <path class="pipe" d="M 342.8,495.8 v 64.5" />
+        <path class="pipe" d="M 649.5,497.2 v 63.5" />
+        <path class="pipe" d="M 732.4,494.4 v 64.5" />
+
+        <!-- ЭЛЕМЕНТЫ -->
+        <rect id="q1" class="interactive" width="50" height="50" x="138.9" y="246.1" />
+        <text class="label" x="163.9" y="271.1">Q1</text>
+
+        <rect id="q2" class="interactive" width="50" height="50" x="782.6" y="246.6" />
+        <text class="label" x="807.6" y="271.6">Q2</text>
+        
+        <rect id="q3" class="interactive" width="50" height="50" x="463.0" y="132.7" />
+        <text class="label" x="488.0" y="157.7">Q3</text>
+
+        <rect id="q4" class="interactive" width="50" height="50" x="462.2" y="379.5" />
+        <text class="label" x="487.2" y="404.5">Q4</text>
+
+        <rect id="q5" class="interactive" width="50" height="50" x="234.9" y="445.9" />
+        <text class="label" x="259.9" y="470.9">Q5</text>
+
+        <rect id="q6" class="interactive" width="50" height="50" x="316.2" y="445.4" />
+        <text class="label" x="341.2" y="470.4">Q6</text>
+
+        <rect id="q7" class="interactive" width="50" height="50" x="624.5" y="444.5" />
+        <text class="label" x="649.5" y="469.5">Q7</text>
+
+        <rect id="q8" class="interactive" width="50" height="50" x="705.9" y="444.0" />
+        <text class="label" x="730.9" y="469.0">Q8</text>
+
+        <ellipse id="t1" class="interactive" cx="233.1" cy="60.3" rx="18.4" ry="17.9" />
+        <text class="label" x="233.1" y="60.3">T1</text>
+
+        <ellipse id="t2" class="interactive" cx="369.2" cy="61.4" rx="18.4" ry="17.9" />
+        <text class="label" x="369.2" y="61.4">T2</text>
+
+        <ellipse id="t3" class="interactive" cx="611.6" cy="60.0" rx="18.4" ry="17.9" />
+        <text class="label" x="611.6" y="60.0">T3</text>
+
+        <ellipse id="t4" class="interactive" cx="747.6" cy="61.1" rx="18.4" ry="17.9" />
+        <text class="label" x="747.6" y="61.1">T4</text>
+        
+        <ellipse id="l1" class="interactive" cx="233.8" cy="309.5" rx="18.4" ry="17.9" />
+        <text class="label" x="233.8" y="309.5">L1</text>
+
+        <ellipse id="l2" class="interactive" cx="369.9" cy="310.5" rx="18.4" ry="17.9" />
+        <text class="label" x="369.9" y="310.5">L2</text>
+
+        <ellipse id="l3" class="interactive" cx="612.2" cy="309.2" rx="18.4" ry="17.9" />
+        <text class="label" x="612.2" y="309.2">L3</text>
+
+        <ellipse id="l4" class="interactive" cx="748.3" cy="310.2" rx="18.4" ry="17.9" />
+        <text class="label" x="748.3" y="310.2">L4</text>
+
+        <circle id="m1" class="interactive" cx="300.4" cy="548.8" r="37.6" />
+        <text class="label" x="300.4" y="548.8" style="font-size:14px; fill:#fff;">M1</text>
+
+        <circle id="m2" class="interactive" cx="690.0" cy="547.4" r="37.6" />
+        <text class="label" x="690.0" y="547.4" style="font-size:14px; fill:#fff;">M2</text>
+    </svg>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const devices = document.querySelectorAll('.interactive');
+        
+        devices.forEach(function(el) {
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+                
+                // Принудительная перерисовка для мгновенного эффекта
+                this.style.display = 'none';
+                this.offsetHeight; 
+                this.style.display = '';
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
