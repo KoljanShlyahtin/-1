@@ -7,11 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const STORAGE_KEY = 'schema_state_v1';
 
     let isEditMode = true;
+    let tooltipTimeout; // Переменная для таймера исчезновения
 
     // === НАСТРОЙКА ЗВУКОВ ===
     const sounds = {
-        click: new Audio("Footstep_Dirt_3.ogg.mp3"),
-        error: new Audio("Landing.wav.mp3")
+        click: new Audio("sounds/click.mp3"),
+        error: new Audio("sounds/error.mp3")
     };
 
     Object.values(sounds).forEach(s => {
@@ -79,13 +80,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return `<span class="info-title">${name}</span><span class="info-status">Статус: ${statusHtml}</span>`;
     }
 
-    // Функция принудительного обновления инфо-тултипа
-    function updateInfoTooltip(el) {
-        // Проверяем, находится ли мышь над элементом (грубая проверка по координатам не нужна, 
-        // так как событие mouseleave само скроет тултип, если мышь ушла)
-        // Мы просто обновляем HTML и делаем его видимым, если он уже был виден или мы только что кликнули
+    // Функция показа подсказки с авто-скрытием
+    function showInfoTooltip(el, x, y) {
+        // Сбрасываем предыдущий таймер скрытия
+        clearTimeout(tooltipTimeout);
+
         infoTooltip.innerHTML = getInfoText(el);
+        infoTooltip.style.left = x + 'px';
+        infoTooltip.style.top = (y - 10) + 'px';
         infoTooltip.style.opacity = '1';
+
+        // Устанавливаем новый таймер: скрыть через 1500 мс (1.5 сек)
+        tooltipTimeout = setTimeout(() => {
+            infoTooltip.style.opacity = '0';
+        }, 1500);
     }
 
     // ОБРАБОТЧИКИ СОБЫТИЙ
@@ -97,8 +105,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.classList.contains('locked')) {
                 showTooltip(e.clientX, e.clientY, "Недоступно: включена смежная цепь");
                 playSound('error');
-                // Даже при ошибке обновляем инфо-подсказку, чтобы пользователь видел статус "ЗАБЛОКИРОВАНО"
-                updateInfoTooltip(this); 
                 return;
             }
 
@@ -107,21 +113,31 @@ document.addEventListener('DOMContentLoaded', function() {
             saveState();
             updateLocks();
             
-            // !!! ГЛАВНОЕ ИСПРАВЛЕНИЕ: Обновляем подсказку сразу после клика
-            updateInfoTooltip(this);
+            // Показываем обновленную подсказку сразу после клика
+            showInfoTooltip(this, e.clientX, e.clientY);
         });
 
         el.addEventListener('mouseenter', function(e) {
-            updateInfoTooltip(this);
+            showInfoTooltip(this, e.clientX, e.clientY);
         });
 
         el.addEventListener('mousemove', function(e) {
-            // Двигаем тултип за мышью
-            infoTooltip.style.left = e.clientX + 'px';
-            infoTooltip.style.top = (e.clientY - 10) + 'px';
+            // Если подсказка видна, двигаем её за мышью и сбрасываем таймер исчезновения
+            if (infoTooltip.style.opacity === '1') {
+                infoTooltip.style.left = e.clientX + 'px';
+                infoTooltip.style.top = (e.clientY - 10) + 'px';
+                
+                // Сбрасываем таймер, чтобы она не исчезла пока мы двигаем мышью
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = setTimeout(() => {
+                    infoTooltip.style.opacity = '0';
+                }, 1500);
+            }
         });
 
         el.addEventListener('mouseleave', () => {
+            // При уходе мыши скрываем немедленно
+            clearTimeout(tooltipTimeout);
             infoTooltip.style.opacity = '0';
         });
     });
