@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // === НАСТРОЙКА ЗВУКОВ ===
     const sounds = {
-        click: new Audio("sounds/click.mp3"),
+        click: new Audio("Footstep_Dirt_3.ogg.mp3"),
         error: new Audio("Landing.wav.mp3")
     };
 
