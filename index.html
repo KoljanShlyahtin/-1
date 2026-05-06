@@ -3,38 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мнемосхема PRO (Исправленная)</title>
+    <title>Мнемосхема PRO (Адаптивная)</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* Исправляем масштабирование схемы */
+        .schema-container {
+            display: flex; 
+            justify-content: center; 
+            align-items: center; /* Центрируем по вертикали */
+            width: 100vw; 
+            height: 100vh; 
+            padding: 10px;
+            overflow: hidden; /* Убираем прокрутку */
+        }
+
+        #main-svg {
+            width: 100%; 
+            height: auto; /* Автоматическая высота для сохранения пропорций */
+            max-width: 1000px; /* Максимальная ширина как в viewBox */
+            max-height: 100%; /* Не выходит за пределы экрана */
+            background-color: #e8e4d9;
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+            border-radius: 4px;
+            touch-action: none; 
+            aspect-ratio: 1000 / 600; /* Сохраняем пропорции 1000x600 */
+        }
+
+        /* Панель управления адаптивная */
         .control-panel {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8); padding: 10px 20px; border-radius: 30px;
-            display: flex; gap: 15px; z-index: 200; backdrop-filter: blur(5px);
+            position: absolute;
+            top: 10px; /* Ближе к верху */
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 15px;
+            border-radius: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 200;
+            backdrop-filter: blur(5px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 12px; /* Меньше шрифт на мобильных */
         }
+
         .ctrl-btn {
-            background: #444; color: white; border: 1px solid #666;
-            padding: 8px 15px; border-radius: 20px; cursor: pointer;
-            font-size: 13px; transition: all 0.2s; outline: none;
+            padding: 6px 12px;
+            font-size: 12px;
         }
-        .ctrl-btn:hover { background: #555; }
-        .ctrl-btn.active-mode { background: #2e7d32; border-color: #4caf50; font-weight: bold; }
+
+        /* Адаптивные подписи */
+        .label-small { font-size: 7px; } /* Чуть меньше на мобильных */
+        .label { font-size: 9px; }
         
-        #info-tooltip {
-            position: absolute; background: white; color: #333; padding: 8px 12px;
-            border-radius: 6px; font-size: 13px; pointer-events: none; opacity: 0;
-            transition: opacity 0.1s; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 1px solid #ccc; max-width: 200px; text-align: center;
-            transform: translate(-50%, -120%);
+        @media (min-width: 768px) {
+            .label-small { font-size: 8px; }
+            .label { font-size: 10px; }
+            .ctrl-btn { font-size: 13px; padding: 8px 15px; }
         }
-        .info-title { font-weight: bold; display: block; margin-bottom: 4px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 2px;}
-        .info-status { font-size: 12px; color: #666; }
-        .status-on { color: #d32f2f; font-weight: bold; }
-        .status-off { color: #2e7d32; font-weight: bold; }
-        .status-locked { color: #f57c00; font-weight: bold; }
-        
-        .panel-reset { background: #d32f2f; border-color: #b71c1c; }
-        .panel-reset:hover { background: #b71c1c; }
     </style>
 </head>
 <body>
@@ -45,10 +70,11 @@
 
     <div class="control-panel">
         <button id="btn-mode" class="ctrl-btn active-mode">Режим: Редактирование</button>
-        <button class="ctrl-btn panel-reset" onclick="resetSchema()">Сброс схемы</button>
+        <button class="ctrl-btn panel-reset" onclick="resetSchema()">Сброс</button>
     </div>
 
-    <svg id="main-svg" width="1000" height="600" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
+    <!-- SVG без фиксированных width/height, только viewBox -->
+    <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
         <rect width="100%" height="100%" fill="#e8e4d9" />
 
         <!-- === ЛИНИИ === -->
@@ -138,67 +164,30 @@
         <circle id="T1" class="interactive" data-name="Трансформатор 1Т" cx="690.96" cy="546.16" r="40.54" />
         <text class="label label-white" x="690.96" y="546.16">1Т</text>
 
-        <!-- === НОЖИ ЗАЗЕМЛЕНИЯ (ИСПРАВЛЕННЫЕ) === -->
-        
-        <!-- Верхний ряд -->
+        <!-- === НОЖИ ЗАЗЕМЛЕНИЯ === -->
         <g id="knife-4" class="interactive knife" data-name="Заземление Knife-4" data-pair="t4">
-            <path d="M 612.40,91.35 H 561.61" />
-            <path d="M 564.48,88.93 V 114.27" />
-            <path d="M 549.89,113.35 H 579.73" />
-            <path d="m 555.88,123.49 c 5.99,0 11.98,0 17.97,0" />
+            <path d="M 612.40,91.35 H 561.61" /><path d="M 564.48,88.93 V 114.27" /><path d="M 549.89,113.35 H 579.73" /><path d="m 555.88,123.49 c 5.99,0 11.98,0 17.97,0" />
         </g>
-
         <g id="knife-3" class="interactive knife" data-name="Заземление Knife-3" data-pair="t3">
-            <path d="M 750.15,91.18 H 699.35" />
-            <path d="M 702.23,88.75 V 114.10" />
-            <path d="m 687.64,113.18 h 29.83" />
-            <path d="m 693.63,123.31 c 5.99,0 11.98,0 17.97,0" />
+            <path d="M 750.15,91.18 H 699.35" /><path d="M 702.23,88.75 V 114.10" /><path d="m 687.64,113.18 h 29.83" /><path d="m 693.63,123.31 c 5.99,0 11.98,0 17.97,0" />
         </g>
-
         <g id="knife-6" class="interactive knife" data-name="Заземление Knife-6" data-pair="t6">
-            <path d="M 236.29,91.64 H 185.49" />
-            <path d="M 188.37,89.21 V 114.56" />
-            <path d="M 173.78,113.64 H 203.62" />
-            <path d="m 179.77,123.78 c 5.99,0 11.98,0 17.97,0" />
+            <path d="M 236.29,91.64 H 185.49" /><path d="M 188.37,89.21 V 114.56" /><path d="M 173.78,113.64 H 203.62" /><path d="m 179.77,123.78 c 5.99,0 11.98,0 17.97,0" />
         </g>
-
         <g id="knife-5" class="interactive knife" data-name="Заземление Knife-5" data-pair="t5">
-            <path d="M 369.91,91.03 H 319.11" />
-            <path d="M 321.98,88.60 V 113.95" />
-            <path d="m 307.39,113.03 h 29.83" />
-            <path d="m 313.38,123.17 c 5.99,0 11.98,0 17.97,0" />
+            <path d="M 369.91,91.03 H 319.11" /><path d="M 321.98,88.60 V 113.95" /><path d="m 307.39,113.03 h 29.83" /><path d="m 313.38,123.17 c 5.99,0 11.98,0 17.97,0" />
         </g>
-
-        <!-- Нижний ряд (ИСПРАВЛЕНО: Knife-1 и Knife-2 поменяны местами по координатам) -->
-        
-        <!-- Knife-2 (Пара для СТД-22, координаты X~612) -->
         <g id="knife-2" class="interactive knife" data-name="Заземление Knife-2" data-pair="t2">
-            <path d="M 614.00,345.15 H 563.20" />
-            <path d="m 566.08,342.72 v 25.34" />
-            <path d="m 551.49,367.15 h 29.83" />
-            <path d="m 557.48,377.28 c 5.99,0 11.98,0 17.97,0" />
+            <path d="M 614.00,345.15 H 563.20" /><path d="m 566.08,342.72 v 25.34" /><path d="m 551.49,367.15 h 29.83" /><path d="m 557.48,377.28 c 5.99,0 11.98,0 17.97,0" />
         </g>
-
-        <!-- Knife-1 (Пара для СТД-21, координаты X~750) -->
         <g id="knife-1" class="interactive knife" data-name="Заземление Knife-1" data-pair="t1">
-            <path d="M 750.12,344.13 H 699.32" />
-            <path d="m 702.19,341.71 v 25.34" />
-            <path d="m 687.60,366.13 h 29.83" />
-            <path d="m 693.59,376.27 c 5.99,0 11.98,0 17.97,0" />
+            <path d="M 750.12,344.13 H 699.32" /><path d="m 702.19,341.71 v 25.34" /><path d="m 687.60,366.13 h 29.83" /><path d="m 693.59,376.27 c 5.99,0 11.98,0 17.97,0" />
         </g>
-
         <g id="knife-8" class="interactive knife" data-name="Заземление Knife-8" data-pair="t8">
-            <path d="M 282.94,345.12 H 232.14" />
-            <path d="m 281.01,342.70 v 25.34" />
-            <path d="m 266.42,367.12 h 29.83" />
-            <path d="m 272.41,377.26 c 5.99,0 11.98,0 17.97,0" />
+            <path d="M 282.94,345.12 H 232.14" /><path d="m 281.01,342.70 v 25.34" /><path d="m 266.42,367.12 h 29.83" /><path d="m 272.41,377.26 c 5.99,0 11.98,0 17.97,0" />
         </g>
-
         <g id="knife-7" class="interactive knife" data-name="Заземление Knife-7" data-pair="t7">
-            <path d="M 420.05,345.44 H 369.25" />
-            <path d="m 418.13,343.02 v 25.34" />
-            <path d="m 403.54,367.44 h 29.83" />
-            <path d="m 409.53,377.58 c 5.99,0 11.98,0 17.97,0" />
+            <path d="M 420.05,345.44 H 369.25" /><path d="m 418.13,343.02 v 25.34" /><path d="m 403.54,367.44 h 29.83" /><path d="m 409.53,377.58 c 5.99,0 11.98,0 17.97,0" />
         </g>
 
     </svg>
