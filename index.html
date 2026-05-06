@@ -3,200 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мнемосхема (Без эффектов)</title>
+    <title>Мнемосхема PRO (Исправленная)</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+        .control-panel {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8); padding: 10px 20px; border-radius: 30px;
+            display: flex; gap: 15px; z-index: 200; backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #1a1a1a;
-            overflow: hidden;
-            font-family: sans-serif;
-            user-select: none;
+        .ctrl-btn {
+            background: #444; color: white; border: 1px solid #666;
+            padding: 8px 15px; border-radius: 20px; cursor: pointer;
+            font-size: 13px; transition: all 0.2s; outline: none;
         }
-        .schema-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100vw;
-            height: 100vh;
-            padding: 10px;
+        .ctrl-btn:hover { background: #555; }
+        .ctrl-btn.active-mode { background: #2e7d32; border-color: #4caf50; font-weight: bold; }
+        
+        #info-tooltip {
+            position: absolute; background: white; color: #333; padding: 8px 12px;
+            border-radius: 6px; font-size: 13px; pointer-events: none; opacity: 0;
+            transition: opacity 0.1s; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid #ccc; max-width: 200px; text-align: center;
+            transform: translate(-50%, -120%);
         }
-        #main-svg {
-            width: 100%;
-            height: 100%;
-            max-width: 1200px;
-            max-height: 800px;
-            background-color: #e8e4d9;
-            box-shadow: 0 0 25px rgba(0,0,0,0.6);
-            border-radius: 4px;
-            aspect-ratio: 1000 / 600;
-            touch-action: none; 
-        }
-
-        /* === ЛИНИИ === */
-        .pipe {
-            fill: none;
-            stroke: #555555;
-            stroke-width: 6;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            pointer-events: none;
-        }
-
-        /* === ИНТЕРАКТИВНЫЕ ЭЛЕМЕНТЫ === */
-        .interactive {
-            cursor: pointer;
-            fill: transparent;
-            stroke: #555555;
-            stroke-width: 6;
-            /* Никаких анимаций и переходов */
-        }
-
-        /* Активное состояние (ВКЛ) */
-        .interactive.active {
-            stroke: #cc0000;
-            fill: #ffcccc;
-            stroke-width: 7;
-        }
-
-        /* Текст */
-        .label {
-            pointer-events: none;
-            font-size: 11px;
-            font-weight: bold;
-            fill: #333;
-            text-anchor: middle;
-            dominant-baseline: middle;
-            user-select: none;
-        }
-
-        .hint {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            z-index: 100;
-            pointer-events: none;
-        }
+        .info-title { font-weight: bold; display: block; margin-bottom: 4px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 2px;}
+        .info-status { font-size: 12px; color: #666; }
+        .status-on { color: #d32f2f; font-weight: bold; }
+        .status-off { color: #2e7d32; font-weight: bold; }
+        .status-locked { color: #f57c00; font-weight: bold; }
+        
+        .panel-reset { background: #d32f2f; border-color: #b71c1c; }
+        .panel-reset:hover { background: #b71c1c; }
     </style>
 </head>
 <body>
 
 <div class="schema-container">
-    <div class="hint">⚡ Только клик меняет цвет</div>
-    
-    <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
+    <div id="tooltip">Блокировка активна!</div>
+    <div id="info-tooltip"></div>
+
+    <div class="control-panel">
+        <button id="btn-mode" class="ctrl-btn active-mode">Режим: Редактирование</button>
+        <button class="ctrl-btn panel-reset" onclick="resetSchema()">Сброс схемы</button>
+    </div>
+
+    <svg id="main-svg" width="1000" height="600" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
         <rect width="100%" height="100%" fill="#e8e4d9" />
 
-        <!-- ЛИНИИ -->
-        <path class="pipe" d="M 164.5,244.6 V 154.1" />
-        <path class="pipe" d="M 811.4,156.0 H 513.6" />
-        <path class="pipe" d="M 234.0,156.6 V 79.2" />
-        <path class="pipe" d="M 368.9,155.2 V 77.8" />
-        <path class="pipe" d="M 234.6,405.3 V 327.9" />
-        <path class="pipe" d="M 369.4,403.9 V 326.5" />
-        <path class="pipe" d="M 612.2,158.8 V 81.4" />
-        <path class="pipe" d="M 747.0,157.4 V 80.0" />
-        <path class="pipe" d="M 612.7,407.5 V 330.1" />
-        <path class="pipe" d="M 747.5,406.1 V 328.7" />
-        <path class="pipe" d="M 162.9,407.3 H 457.8" />
-        <path class="pipe" d="M 512.4,407.3 H 809.1" />
-        <path class="pipe" d="M 809.1,407.3 V 297.6" />
-        <path class="pipe" d="M 810.0,246.0 V 154.8" />
-        <path class="pipe" d="M 461.7,156.6 H 164.9" />
-        <path class="pipe" d="M 165.1,297.3 V 409.5" />
-        <path class="pipe" d="M 261.9,447.7 v -40.4" />
-        <path class="pipe" d="M 342.1,446.3 V 156.6" />
-        <path class="pipe" d="M 730.8,445.1 V 408.2" />
-        <path class="pipe" d="M 649.5,446.9 V 154.8" />
-        <path class="pipe" d="M 259.8,498.5 v 63.5" />
-        <path class="pipe" d="M 342.8,495.8 v 64.5" />
-        <path class="pipe" d="M 649.5,497.2 v 63.5" />
-        <path class="pipe" d="M 732.4,494.4 v 64.5" />
-
-        <!-- ЭЛЕМЕНТЫ -->
-        <rect id="q1" class="interactive" width="50" height="50" x="138.9" y="246.1" />
-        <text class="label" x="163.9" y="271.1">Q1</text>
-
-        <rect id="q2" class="interactive" width="50" height="50" x="782.6" y="246.6" />
-        <text class="label" x="807.6" y="271.6">Q2</text>
+        <!-- === ЛИНИИ === -->
+        <path class="pipe" d="M 234.08,156.67 V 79.25" />
+        <path class="pipe" d="M 368.94,155.25 V 77.84" />
+        <path class="pipe" d="M 234.60,405.35 V 327.94" />
+        <path class="pipe" d="M 369.45,407.16 V 326.52" />
+        <path class="pipe" d="M 612.21,157.24 V 79.83" />
+        <path class="pipe" d="M 749.06,157.45 V 80.04" />
+        <path class="pipe" d="M 612.73,407.55 V 328.53" />
+        <path class="pipe" d="M 747.58,406.14 V 328.72" />
         
-        <rect id="q3" class="interactive" width="50" height="50" x="463.0" y="132.7" />
-        <text class="label" x="488.0" y="157.7">Q3</text>
+        <g style="stroke:#555; stroke-width:6; fill:none;">
+            <path d="M 512.41,407.35 H 812.16" />
+            <path d="M 809.17,410.23 V 297.67" />
+            <path d="M 812.69,155.60 H 513.60" />
+            <path d="M 810.09,246.06 V 154.05" />
+            <path d="M 164.54,244.62 V 153.70" />
+            <path d="M 461.72,156.67 H 161.68" />
+            <path d="M 162.05,407.35 H 462.11" />
+            <path d="M 165.12,297.38 V 410.38" />
+        </g>
 
-        <rect id="q4" class="interactive" width="50" height="50" x="462.2" y="379.5" />
-        <text class="label" x="487.2" y="404.5">Q4</text>
+        <path class="pipe" d="M 730.83,445.13 V 408.27" />
+        <path class="pipe" d="M 342.14,443.79 V 406.93" />
+        <path class="pipe" d="M 649.57,446.98 V 154.83" />
+        <path class="pipe" d="M 261.92,447.01 V 154.86" />
+        <path class="pipe" d="M 259.89,498.59 v 49.25" />
+        <path class="pipe" d="M 342.83,495.82 v 51.96" />
+        <path class="pipe" d="M 649.51,497.22 v 50.68" />
+        <path class="pipe" d="M 732.45,494.46 v 53.68" />
 
-        <rect id="q5" class="interactive" width="50" height="50" x="234.9" y="445.9" />
-        <text class="label" x="259.9" y="470.9">Q5</text>
+        <!-- === ВЫКЛЮЧАТЕЛИ === -->
+        <rect id="q2" class="interactive" data-name="13ШСВ (яч.27)" width="50" height="50" x="784.66" y="246.60" />
+        <text class="label label-small" x="809.66" y="271"><tspan x="809.66" dy="0">13ШСВ</tspan><tspan x="809.66" dy="10">яч.27</tspan></text>
 
-        <rect id="q6" class="interactive" width="50" height="50" x="316.2" y="445.4" />
-        <text class="label" x="341.2" y="470.4">Q6</text>
+        <rect id="q1" class="interactive" data-name="24ШСВ (яч.9)" width="50" height="50" x="138.93" y="246.12" />
+        <text class="label label-small" x="163.93" y="271"><tspan x="163.93" dy="0">24ШСВ</tspan><tspan x="163.93" dy="10">яч.9</tspan></text>
 
-        <rect id="q7" class="interactive" width="50" height="50" x="624.5" y="444.5" />
-        <text class="label" x="649.5" y="469.5">Q7</text>
+        <rect id="q5" class="interactive" data-name="4ВВ-10 (2Т)" width="50" height="50" x="234.94" y="445.90" />
+        <text class="label label-small" x="259.94" y="470"><tspan x="259.94" dy="0">4ВВ-10</tspan><tspan x="259.94" dy="10">2Т</tspan></text>
 
-        <rect id="q8" class="interactive" width="50" height="50" x="705.9" y="444.0" />
-        <text class="label" x="730.9" y="469.0">Q8</text>
+        <rect id="q6" class="interactive" data-name="2ВВ-10 (2Т)" width="50" height="50" x="316.29" y="445.41" />
+        <text class="label label-small" x="341.29" y="470"><tspan x="341.29" dy="0">2ВВ-10</tspan><tspan x="341.29" dy="10">2Т</tspan></text>
 
-        <ellipse id="t1" class="interactive" cx="233.1" cy="60.3" rx="18.4" ry="17.9" />
-        <text class="label" x="233.1" y="60.3">T1</text>
+        <rect id="q3" class="interactive" data-name="34СВ (яч.18)" width="50" height="50" x="463.07" y="132.76" />
+        <text class="label label-small" x="488.07" y="157"><tspan x="488.07" dy="0">34СВ</tspan><tspan x="488.07" dy="10">яч.18</tspan></text>
 
-        <ellipse id="t2" class="interactive" cx="369.2" cy="61.4" rx="18.4" ry="17.9" />
-        <text class="label" x="369.2" y="61.4">T2</text>
+        <rect id="q4" class="interactive" data-name="12СВ (яч.2)" width="50" height="50" x="462.21" y="379.57" />
+        <text class="label label-small" x="487.21" y="404"><tspan x="487.21" dy="0">12СВ</tspan><tspan x="487.21" dy="10">яч.2</tspan></text>
 
-        <ellipse id="t3" class="interactive" cx="611.6" cy="60.0" rx="18.4" ry="17.9" />
-        <text class="label" x="611.6" y="60.0">T3</text>
+        <rect id="q7" class="interactive" data-name="3ВВ-10 (1Т)" width="50" height="50" x="624.56" y="444.54" />
+        <text class="label label-small" x="649.56" y="469"><tspan x="649.56" dy="0">3ВВ-10</tspan><tspan x="649.56" dy="10">1Т</tspan></text>
 
-        <ellipse id="t4" class="interactive" cx="747.6" cy="61.1" rx="18.4" ry="17.9" />
-        <text class="label" x="747.6" y="61.1">T4</text>
+        <rect id="q8" class="interactive" data-name="1ВВ-10 (1Т)" width="50" height="50" x="705.90" y="444.05" />
+        <text class="label label-small" x="730.90" y="469"><tspan x="730.90" dy="0">1ВВ-10</tspan><tspan x="730.90" dy="10">1Т</tspan></text>
+
+        <!-- === СТД (ДАТЧИКИ) === -->
+        <ellipse id="t6" class="interactive device" data-name="СТД-26" data-pair="knife-6" cx="233.16" cy="60.36" rx="18.43" ry="17.97" />
+        <text class="label label-small" x="233.16" y="60.36"><tspan x="233.16" dy="-4">26</tspan><tspan x="233.16" dy="9">яч.12</tspan></text>
+
+        <ellipse id="t5" class="interactive device" data-name="СТД-25" data-pair="knife-5" cx="369.26" cy="61.44" rx="18.43" ry="17.97" />
+        <text class="label label-small" x="369.26" y="61.44"><tspan x="369.26" dy="-4">25</tspan><tspan x="369.26" dy="9">яч.15</tspan></text>
+
+        <ellipse id="t4" class="interactive device" data-name="СТД-24" data-pair="knife-4" cx="611.60" cy="60.06" rx="18.43" ry="17.97" />
+        <text class="label label-small" x="611.60" y="60.06"><tspan x="611.60" dy="-4">24</tspan><tspan x="611.60" dy="9">яч.20</tspan></text>
+
+        <ellipse id="t3" class="interactive device" data-name="СТД-23" data-pair="knife-3" cx="747.69" cy="61.14" rx="18.43" ry="17.97" />
+        <text class="label label-small" x="747.69" y="61.14"><tspan x="747.69" dy="-4">23</tspan><tspan x="747.69" dy="9">яч.21</tspan></text>
         
-        <ellipse id="l1" class="interactive" cx="233.8" cy="309.5" rx="18.4" ry="17.9" />
-        <text class="label" x="233.8" y="309.5">L1</text>
+        <ellipse id="t8" class="interactive device" data-name="СТД-28" data-pair="knife-8" cx="233.81" cy="309.51" rx="18.43" ry="17.97" />
+        <text class="label label-small" x="233.81" y="309.51"><tspan x="233.81" dy="-4">28</tspan><tspan x="233.81" dy="9">яч.8</tspan></text>
 
-        <ellipse id="l2" class="interactive" cx="369.9" cy="310.5" rx="18.4" ry="17.9" />
-        <text class="label" x="369.9" y="310.5">L2</text>
+        <ellipse id="t7" class="interactive device" data-name="СТД-27" data-pair="knife-7" cx="369.90" cy="310.58" rx="18.43" ry="17.97" />
+        <text class="label label-small" x="369.90" y="310.58"><tspan x="369.90" dy="-4">27</tspan><tspan x="369.90" dy="9">яч.9</tspan></text>
 
-        <ellipse id="l3" class="interactive" cx="612.2" cy="309.2" rx="18.4" ry="17.9" />
-        <text class="label" x="612.2" y="309.2">L3</text>
+        <ellipse id="t2" class="interactive device" data-name="СТД-22" data-pair="knife-2" cx="612.25" cy="309.21" rx="18.43" ry="17.97" />
+        <text class="label label-small" x="612.25" y="309.21"><tspan x="612.25" dy="-4">22</tspan><tspan x="612.25" dy="9">яч.29</tspan></text>
 
-        <ellipse id="l4" class="interactive" cx="748.3" cy="310.2" rx="18.4" ry="17.9" />
-        <text class="label" x="748.3" y="310.2">L4</text>
+        <ellipse id="t1" class="interactive device" data-name="СТД-21" data-pair="knife-1" cx="748.34" cy="310.29" rx="18.43" ry="17.97" />
+        <text class="label label-small" x="748.34" y="310.29"><tspan x="748.34" dy="-4">21</tspan><tspan x="748.34" dy="9">яч.30</tspan></text>
 
-        <circle id="m1" class="interactive" cx="300.4" cy="548.8" r="37.6" />
-        <text class="label" x="300.4" y="548.8" style="font-size:14px; fill:#fff;">M1</text>
+        <!-- === ТРАНСФОРМАТОРЫ === -->
+        <circle id="T2" class="interactive" data-name="Трансформатор 2Т" cx="301.24" cy="546.62" r="40.54" />
+        <text class="label label-white" x="301.24" y="546.62">2Т</text>
 
-        <circle id="m2" class="interactive" cx="690.0" cy="547.4" r="37.6" />
-        <text class="label" x="690.0" y="547.4" style="font-size:14px; fill:#fff;">M2</text>
+        <circle id="T1" class="interactive" data-name="Трансформатор 1Т" cx="690.96" cy="546.16" r="40.54" />
+        <text class="label label-white" x="690.96" y="546.16">1Т</text>
+
+        <!-- === НОЖИ ЗАЗЕМЛЕНИЯ (ИСПРАВЛЕННЫЕ) === -->
+        
+        <!-- Верхний ряд -->
+        <g id="knife-4" class="interactive knife" data-name="Заземление Knife-4" data-pair="t4">
+            <path d="M 612.40,91.35 H 561.61" />
+            <path d="M 564.48,88.93 V 114.27" />
+            <path d="M 549.89,113.35 H 579.73" />
+            <path d="m 555.88,123.49 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+
+        <g id="knife-3" class="interactive knife" data-name="Заземление Knife-3" data-pair="t3">
+            <path d="M 750.15,91.18 H 699.35" />
+            <path d="M 702.23,88.75 V 114.10" />
+            <path d="m 687.64,113.18 h 29.83" />
+            <path d="m 693.63,123.31 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+
+        <g id="knife-6" class="interactive knife" data-name="Заземление Knife-6" data-pair="t6">
+            <path d="M 236.29,91.64 H 185.49" />
+            <path d="M 188.37,89.21 V 114.56" />
+            <path d="M 173.78,113.64 H 203.62" />
+            <path d="m 179.77,123.78 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+
+        <g id="knife-5" class="interactive knife" data-name="Заземление Knife-5" data-pair="t5">
+            <path d="M 369.91,91.03 H 319.11" />
+            <path d="M 321.98,88.60 V 113.95" />
+            <path d="m 307.39,113.03 h 29.83" />
+            <path d="m 313.38,123.17 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+
+        <!-- Нижний ряд (ИСПРАВЛЕНО: Knife-1 и Knife-2 поменяны местами по координатам) -->
+        
+        <!-- Knife-2 (Пара для СТД-22, координаты X~612) -->
+        <g id="knife-2" class="interactive knife" data-name="Заземление Knife-2" data-pair="t2">
+            <path d="M 614.00,345.15 H 563.20" />
+            <path d="m 566.08,342.72 v 25.34" />
+            <path d="m 551.49,367.15 h 29.83" />
+            <path d="m 557.48,377.28 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+
+        <!-- Knife-1 (Пара для СТД-21, координаты X~750) -->
+        <g id="knife-1" class="interactive knife" data-name="Заземление Knife-1" data-pair="t1">
+            <path d="M 750.12,344.13 H 699.32" />
+            <path d="m 702.19,341.71 v 25.34" />
+            <path d="m 687.60,366.13 h 29.83" />
+            <path d="m 693.59,376.27 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+
+        <g id="knife-8" class="interactive knife" data-name="Заземление Knife-8" data-pair="t8">
+            <path d="M 282.94,345.12 H 232.14" />
+            <path d="m 281.01,342.70 v 25.34" />
+            <path d="m 266.42,367.12 h 29.83" />
+            <path d="m 272.41,377.26 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+
+        <g id="knife-7" class="interactive knife" data-name="Заземление Knife-7" data-pair="t7">
+            <path d="M 420.05,345.44 H 369.25" />
+            <path d="m 418.13,343.02 v 25.34" />
+            <path d="m 403.54,367.44 h 29.83" />
+            <path d="m 409.53,377.58 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+
     </svg>
 </div>
 
+<script src="script.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const devices = document.querySelectorAll('.interactive');
-        
-        devices.forEach(function(el) {
-            el.addEventListener('click', function(e) {
-                e.stopPropagation();
-                this.classList.toggle('active');
-                
-                // Принудительная перерисовка для мгновенного эффекта
-                this.style.display = 'none';
-                this.offsetHeight; 
-                this.style.display = '';
-            });
-        });
-    });
+    function resetSchema() {
+        if(confirm('Сбросить все состояния схемы?')) {
+            localStorage.removeItem('schema_state_v1');
+            location.reload();
+        }
+    }
 </script>
 
 </body>
