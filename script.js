@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // === НАСТРОЙКА ЗВУКОВ ===
     const sounds = {
         click: new Audio("sounds/click.mp3"),
-        error: new Audio("sounds/error.mp3")
+        error: new Audio("Landing.wav.mp3")
     };
 
     Object.values(sounds).forEach(s => {
