@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // === НАСТРОЙКА ЗВУКОВ ===
     const sounds = {
-        click: new Audio("sounds/Footstep_Dirt_3.ogg.mp3"),
-        error: new Audio("sounds/Landing.wav.mp3")
+        click: new Audio("Footstep_Dirt_3.ogg.mp3"),
+        error: new Audio("Landing.wav.mp3")
     };
 
     // Настройка громкости (0.0 - 1.0) и предзагрузка
