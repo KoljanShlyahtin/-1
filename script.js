@@ -1,3 +1,4 @@
+// script.js
 document.addEventListener('DOMContentLoaded', function() {
     const devices = document.querySelectorAll('.interactive');
     const errorTooltip = document.getElementById('tooltip');
@@ -9,11 +10,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // === НАСТРОЙКА ЗВУКОВ ===
     const sounds = {
-        click: new Audio("Footstep_Dirt_3.ogg.mp3"),
-        error: new Audio("Landing.wav.mp3")
+        click: new Audio("sounds/click.mp3"),
+        error: new Audio("sounds/error.mp3")
     };
 
-    // Настройка громкости (0.0 - 1.0) и предзагрузка
     Object.values(sounds).forEach(s => {
         s.volume = 0.4; 
         s.load();
@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function playSound(name) {
         if (sounds[name]) {
-            // cloneNode позволяет быстро кликать без задержек
             sounds[name].cloneNode(true).play().catch(() => {});
         }
     }
@@ -80,6 +79,15 @@ document.addEventListener('DOMContentLoaded', function() {
         return `<span class="info-title">${name}</span><span class="info-status">Статус: ${statusHtml}</span>`;
     }
 
+    // Функция принудительного обновления инфо-тултипа
+    function updateInfoTooltip(el) {
+        // Проверяем, находится ли мышь над элементом (грубая проверка по координатам не нужна, 
+        // так как событие mouseleave само скроет тултип, если мышь ушла)
+        // Мы просто обновляем HTML и делаем его видимым, если он уже был виден или мы только что кликнули
+        infoTooltip.innerHTML = getInfoText(el);
+        infoTooltip.style.opacity = '1';
+    }
+
     // ОБРАБОТЧИКИ СОБЫТИЙ
     devices.forEach(function(el) {
         el.addEventListener('click', function(e) {
@@ -88,33 +96,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (this.classList.contains('locked')) {
                 showTooltip(e.clientX, e.clientY, "Недоступно: включена смежная цепь");
-                playSound('error'); // 🔊 Звук ошибки
+                playSound('error');
+                // Даже при ошибке обновляем инфо-подсказку, чтобы пользователь видел статус "ЗАБЛОКИРОВАНО"
+                updateInfoTooltip(this); 
                 return;
             }
 
             this.classList.toggle('active');
-            playSound('click'); // 🔊 Звук переключения
+            playSound('click');
             saveState();
             updateLocks();
+            
+            // !!! ГЛАВНОЕ ИСПРАВЛЕНИЕ: Обновляем подсказку сразу после клика
+            updateInfoTooltip(this);
         });
 
         el.addEventListener('mouseenter', function(e) {
-            infoTooltip.innerHTML = getInfoText(this);
-            infoTooltip.style.opacity = '1';
-            moveTooltip(e);
+            updateInfoTooltip(this);
         });
 
-        el.addEventListener('mousemove', moveTooltip);
+        el.addEventListener('mousemove', function(e) {
+            // Двигаем тултип за мышью
+            infoTooltip.style.left = e.clientX + 'px';
+            infoTooltip.style.top = (e.clientY - 10) + 'px';
+        });
 
         el.addEventListener('mouseleave', () => {
             infoTooltip.style.opacity = '0';
         });
     });
-
-    function moveTooltip(e) {
-        infoTooltip.style.left = e.clientX + 'px';
-        infoTooltip.style.top = (e.clientY - 10) + 'px';
-    }
 
     function showTooltip(x, y, text) {
         errorTooltip.textContent = text;
@@ -133,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Глобальная функция сброса (для onclick в HTML)
+    // Глобальная функция сброса
     window.resetSchema = function() {
         if(confirm('Сбросить все состояния схемы?')) {
             localStorage.removeItem('schema_state_v1');
@@ -145,3 +155,4 @@ document.addEventListener('DOMContentLoaded', function() {
     loadState();
     updateLocks();
 });
+
