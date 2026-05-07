@@ -2,265 +2,521 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мнемосхема PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Мнемосхема PRO | Адаптивная</title>
     
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
         
         body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #1a1a1a; overflow: hidden;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a1a1a;
+            overflow: hidden;
+            position: fixed;
         }
 
+        /* Главный контейнер с центрированием и адаптацией */
         .schema-container {
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            width: 100vw; 
-            height: 100vh; 
-            /* Убрали лишний отступ, схема теперь больше */
-            padding: 5px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
             position: relative;
         }
 
+        /* SVG адаптивная обертка - сохраняем пропорции и масштабируем без обрезки */
         #main-svg {
-            width: 100%; 
-            height: 100%; 
-            max-height: 100%; 
-            background-color: #e8e4d9;
-            box-shadow: 0 0 25px rgba(0,0,0,0.6);
-            border-radius: 4px;
-            touch-action: none; 
             display: block;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            background-color: #e8e4d9;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            touch-action: pan-x pan-y; /* улучшаем touch-скролл при зуме */
+            cursor: grab;
+        }
+        
+        /* Для предотвращения случайного выделения */
+        #main-svg:active {
+            cursor: grabbing;
         }
 
-        .pipe { fill: none; stroke: #555555; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+        /* Стили элементов схемы */
+        .pipe {
+            fill: none;
+            stroke: #555555;
+            stroke-width: 5.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            pointer-events: none;
+            vector-effect: non-scaling-stroke; /* сохраняем толщину линий при масштабировании */
+        }
         
         .interactive { 
-            cursor: pointer; fill: transparent; stroke: #555555; stroke-width: 6; transition: all 0.2s ease; 
+            cursor: pointer;
+            fill: rgba(255,255,255,0.35);
+            stroke: #555555;
+            stroke-width: 5;
+            transition: all 0.1s ease;
+            vector-effect: non-scaling-stroke;
+            touch-action: manipulation;
         }
+        
         .interactive.locked { 
-            cursor: not-allowed; opacity: 0.4; stroke: #999 !important; fill: transparent !important; 
+            cursor: not-allowed;
+            opacity: 0.45;
+            stroke: #777 !important;
+            fill: rgba(180,180,180,0.3) !important;
+            filter: grayscale(0.1);
         }
+        
         .interactive.active { 
-            stroke: #cc0000 !important; fill: #ffcccc !important; filter: drop-shadow(0 0 2px rgba(204, 0, 0, 0.5)); 
+            stroke: #cc0000 !important;
+            fill: rgba(204,0,0,0.2) !important;
+            filter: drop-shadow(0 0 2px rgba(204, 0, 0, 0.4));
         }
-        .interactive.active path { stroke: #cc0000 !important; }
-        .interactive:hover:not(.locked) { filter: brightness(0.9); stroke-width: 8; }
-
-        .label { pointer-events: none; font-weight: bold; fill: #333; text-anchor: middle; dominant-baseline: middle; user-select: none; font-size: 9px; }
-        .label-small { font-size: 7px; }
-        .label-white { fill: #333; font-size: 12px; }
-
-        /* Тултипы */
+        
+        /* Увеличение зоны клика для мобильных устройств */
+        .interactive.knife path,
+        .interactive.device {
+            stroke-width: 6;
+            stroke: #3a3a3a;
+        }
+        
+        .interactive.knife.locked path {
+            stroke: #999 !important;
+        }
+        
+        .interactive.active path {
+            stroke: #cc0000 !important;
+        }
+        
+        /* Стили текстовых меток — всегда читаемы */
+        .label {
+            pointer-events: none;
+            font-weight: bold;
+            fill: #2c2c2c;
+            text-anchor: middle;
+            dominant-baseline: central;
+            user-select: none;
+            font-size: 8px;
+            letter-spacing: 0.3px;
+        }
+        .label-small {
+            font-size: 6.5px;
+        }
+        .label-white {
+            fill: #1f1f1f;
+            font-size: 11px;
+            font-weight: 800;
+            text-shadow: 0 0 2px rgba(255,255,200,0.5);
+        }
+        
+        /* Адаптация шрифтов для разных устройств */
+        @media (min-width: 768px) {
+            .label { font-size: 10px; }
+            .label-small { font-size: 8px; }
+            .label-white { font-size: 13px; }
+        }
+        
+        /* Тултипы — удобные и крупные для тач-интерфейса */
         #tooltip {
-            position: absolute; background: #d32f2f; color: white; padding: 5px 10px;
-            border-radius: 4px; font-size: 12px; pointer-events: none; opacity: 0;
-            transition: opacity 0.2s; z-index: 1000; transform: translate(-50%, -150%);
+            position: fixed;
+            background: #d32f2f;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 2000;
+            white-space: nowrap;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+            transform: translate(-50%, -140%);
         }
+        
         #info-tooltip {
-            position: absolute; background: white; color: #333; padding: 8px 12px;
-            border-radius: 6px; font-size: 12px; pointer-events: none; opacity: 0;
-            transition: opacity 0.1s; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 1px solid #ccc; max-width: 200px; text-align: center;
+            position: fixed;
+            background: #1e1e1eef;
+            backdrop-filter: blur(8px);
+            color: #f0f0f0;
+            padding: 10px 18px;
+            border-radius: 28px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 2000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-width: 260px;
+            text-align: center;
+            font-weight: 500;
             transform: translate(-50%, -120%);
+            white-space: nowrap;
         }
-        .info-title { font-weight: bold; display: block; margin-bottom: 4px; font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 2px;}
-        .info-status { font-size: 11px; color: #666; }
-        .status-on { color: #d32f2f; font-weight: bold; }
-        .status-off { color: #2e7d32; font-weight: bold; }
-        .status-locked { color: #f57c00; font-weight: bold; }
+        
+        .info-title {
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 14px;
+            border-right: 1px solid #aaa;
+            padding-right: 10px;
+        }
+        .info-status {
+            font-size: 13px;
+            display: inline-block;
+        }
+        .status-on { color: #ff7b72; font-weight: bold; }
+        .status-off { color: #8bc34a; font-weight: bold; }
+        .status-locked { color: #ffb74d; font-weight: bold; }
+        
+        /* дополнительный адаптив для маленьких экранов */
+        @media (max-width: 640px) and (orientation: landscape) {
+            .label { font-size: 7px; }
+            .label-small { font-size: 5.5px; }
+            .label-white { font-size: 9px; }
+            #info-tooltip { font-size: 11px; padding: 6px 12px; white-space: normal; max-width: 200px; }
+            .info-title { font-size: 12px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="schema-container">
-    <div id="tooltip">Блокировка!</div>
+    <div id="tooltip">⚠️ Блокировка</div>
     <div id="info-tooltip"></div>
-
-    <!-- Кнопки убраны -->
 
     <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
         <rect width="100%" height="100%" fill="#e8e4d9" />
 
-        <!-- ЛИНИИ -->
-        <path class="pipe" d="M 234.08,156.67 V 79.25" /><path class="pipe" d="M 368.94,155.25 V 77.84" />
-        <path class="pipe" d="M 234.60,405.35 V 327.94" /><path class="pipe" d="M 369.45,407.16 V 326.52" />
-        <path class="pipe" d="M 612.21,157.24 V 79.83" /><path class="pipe" d="M 749.06,157.45 V 80.04" />
-        <path class="pipe" d="M 612.73,407.55 V 328.53" /><path class="pipe" d="M 747.58,406.14 V 328.72" />
-        <g style="stroke:#555; stroke-width:6; fill:none;">
-            <path d="M 512.41,407.35 H 812.16" /><path d="M 809.17,410.23 V 297.67" />
-            <path d="M 812.69,155.60 H 513.60" /><path d="M 810.09,246.06 V 154.05" />
-            <path d="M 164.54,244.62 V 153.70" /><path d="M 461.72,156.67 H 161.68" />
-            <path d="M 162.05,407.35 H 462.11" /><path d="M 165.12,297.38 V 410.38" />
+        <!-- ЛИНИИ ПОДКЛЮЧЕНИЙ (Pipes) -->
+        <path class="pipe" d="M 234.08,156.67 V 79.25" />
+        <path class="pipe" d="M 368.94,155.25 V 77.84" />
+        <path class="pipe" d="M 234.60,405.35 V 327.94" />
+        <path class="pipe" d="M 369.45,407.16 V 326.52" />
+        <path class="pipe" d="M 612.21,157.24 V 79.83" />
+        <path class="pipe" d="M 749.06,157.45 V 80.04" />
+        <path class="pipe" d="M 612.73,407.55 V 328.53" />
+        <path class="pipe" d="M 747.58,406.14 V 328.72" />
+        
+        <g style="stroke:#555; stroke-width:5.5; fill:none; stroke-linecap:round;">
+            <path d="M 512.41,407.35 H 812.16" />
+            <path d="M 809.17,410.23 V 297.67" />
+            <path d="M 812.69,155.60 H 513.60" />
+            <path d="M 810.09,246.06 V 154.05" />
+            <path d="M 164.54,244.62 V 153.70" />
+            <path d="M 461.72,156.67 H 161.68" />
+            <path d="M 162.05,407.35 H 462.11" />
+            <path d="M 165.12,297.38 V 410.38" />
         </g>
-        <path class="pipe" d="M 730.83,445.13 V 408.27" /><path class="pipe" d="M 342.14,443.79 V 406.93" />
-        <path class="pipe" d="M 649.57,446.98 V 154.83" /><path class="pipe" d="M 261.92,447.01 V 154.86" />
-        <path class="pipe" d="M 259.89,498.59 v 49.25" /><path class="pipe" d="M 342.83,495.82 v 51.96" />
-        <path class="pipe" d="M 649.51,497.22 v 50.68" /><path class="pipe" d="M 732.45,494.46 v 53.68" />
+        <path class="pipe" d="M 730.83,445.13 V 408.27" />
+        <path class="pipe" d="M 342.14,443.79 V 406.93" />
+        <path class="pipe" d="M 649.57,446.98 V 154.83" />
+        <path class="pipe" d="M 261.92,447.01 V 154.86" />
+        <path class="pipe" d="M 259.89,498.59 v 49.25" />
+        <path class="pipe" d="M 342.83,495.82 v 51.96" />
+        <path class="pipe" d="M 649.51,497.22 v 50.68" />
+        <path class="pipe" d="M 732.45,494.46 v 53.68" />
 
-        <!-- ВЫКЛЮЧАТЕЛИ -->
-        <rect id="q2" class="interactive" data-name="13ШСВ" width="50" height="50" x="784.66" y="246.60" />
-        <text class="label label-small" x="809.66" y="271"><tspan x="809.66" dy="0">13ШСВ</tspan><tspan x="809.66" dy="10">яч.27</tspan></text>
-        <rect id="q1" class="interactive" data-name="24ШСВ" width="50" height="50" x="138.93" y="246.12" />
-        <text class="label label-small" x="163.93" y="271"><tspan x="163.93" dy="0">24ШСВ</tspan><tspan x="163.93" dy="10">яч.9</tspan></text>
-        <rect id="q5" class="interactive" data-name="4ВВ-10" width="50" height="50" x="234.94" y="445.90" />
-        <text class="label label-small" x="259.94" y="470"><tspan x="259.94" dy="0">4ВВ-10</tspan><tspan x="259.94" dy="10">2Т</tspan></text>
-        <rect id="q6" class="interactive" data-name="2ВВ-10" width="50" height="50" x="316.29" y="445.41" />
-        <text class="label label-small" x="341.29" y="470"><tspan x="341.29" dy="0">2ВВ-10</tspan><tspan x="341.29" dy="10">2Т</tspan></text>
-        <rect id="q3" class="interactive" data-name="34СВ" width="50" height="50" x="463.07" y="132.76" />
-        <text class="label label-small" x="488.07" y="157"><tspan x="488.07" dy="0">34СВ</tspan><tspan x="488.07" dy="10">яч.18</tspan></text>
-        <rect id="q4" class="interactive" data-name="12СВ" width="50" height="50" x="462.21" y="379.57" />
-        <text class="label label-small" x="487.21" y="404"><tspan x="487.21" dy="0">12СВ</tspan><tspan x="487.21" dy="10">яч.2</tspan></text>
-        <rect id="q7" class="interactive" data-name="3ВВ-10" width="50" height="50" x="624.56" y="444.54" />
-        <text class="label label-small" x="649.56" y="469"><tspan x="649.56" dy="0">3ВВ-10</tspan><tspan x="649.56" dy="10">1Т</tspan></text>
-        <rect id="q8" class="interactive" data-name="1ВВ-10" width="50" height="50" x="705.90" y="444.05" />
-        <text class="label label-small" x="730.90" y="469"><tspan x="730.90" dy="0">1ВВ-10</tspan><tspan x="730.90" dy="10">1Т</tspan></text>
+        <!-- ВЫКЛЮЧАТЕЛИ (Квадратные блоки) -->
+        <rect id="q2" class="interactive" data-name="13ШСВ" width="50" height="50" x="784.66" y="246.60" rx="4" />
+        <text class="label label-small" x="809.66" y="271"><tspan x="809.66" dy="-3">13ШСВ</tspan><tspan x="809.66" dy="14">яч.27</tspan></text>
+        
+        <rect id="q1" class="interactive" data-name="24ШСВ" width="50" height="50" x="138.93" y="246.12" rx="4" />
+        <text class="label label-small" x="163.93" y="271"><tspan x="163.93" dy="-3">24ШСВ</tspan><tspan x="163.93" dy="14">яч.9</tspan></text>
+        
+        <rect id="q5" class="interactive" data-name="4ВВ-10" width="50" height="50" x="234.94" y="445.90" rx="4" />
+        <text class="label label-small" x="259.94" y="470"><tspan x="259.94" dy="-3">4ВВ-10</tspan><tspan x="259.94" dy="14">2Т</tspan></text>
+        
+        <rect id="q6" class="interactive" data-name="2ВВ-10" width="50" height="50" x="316.29" y="445.41" rx="4" />
+        <text class="label label-small" x="341.29" y="470"><tspan x="341.29" dy="-3">2ВВ-10</tspan><tspan x="341.29" dy="14">2Т</tspan></text>
+        
+        <rect id="q3" class="interactive" data-name="34СВ" width="50" height="50" x="463.07" y="132.76" rx="4" />
+        <text class="label label-small" x="488.07" y="157"><tspan x="488.07" dy="-3">34СВ</tspan><tspan x="488.07" dy="14">яч.18</tspan></text>
+        
+        <rect id="q4" class="interactive" data-name="12СВ" width="50" height="50" x="462.21" y="379.57" rx="4" />
+        <text class="label label-small" x="487.21" y="404"><tspan x="487.21" dy="-3">12СВ</tspan><tspan x="487.21" dy="14">яч.2</tspan></text>
+        
+        <rect id="q7" class="interactive" data-name="3ВВ-10" width="50" height="50" x="624.56" y="444.54" rx="4" />
+        <text class="label label-small" x="649.56" y="469"><tspan x="649.56" dy="-3">3ВВ-10</tspan><tspan x="649.56" dy="14">1Т</tspan></text>
+        
+        <rect id="q8" class="interactive" data-name="1ВВ-10" width="50" height="50" x="705.90" y="444.05" rx="4" />
+        <text class="label label-small" x="730.90" y="469"><tspan x="730.90" dy="-3">1ВВ-10</tspan><tspan x="730.90" dy="14">1Т</tspan></text>
 
-        <!-- СТД -->
+        <!-- СТД Устройства (эллипсы) -->
         <ellipse id="t6" class="interactive device" data-name="СТД-26" data-pair="knife-6" cx="233.16" cy="60.36" rx="18.43" ry="17.97" />
-        <text class="label label-small" x="233.16" y="60.36"><tspan x="233.16" dy="-4">26</tspan><tspan x="233.16" dy="9">яч.12</tspan></text>
+        <text class="label label-small" x="233.16" y="60.36"><tspan x="233.16" dy="-3">26</tspan><tspan x="233.16" dy="12">яч.12</tspan></text>
+        
         <ellipse id="t5" class="interactive device" data-name="СТД-25" data-pair="knife-5" cx="369.26" cy="61.44" rx="18.43" ry="17.97" />
-        <text class="label label-small" x="369.26" y="61.44"><tspan x="369.26" dy="-4">25</tspan><tspan x="369.26" dy="9">яч.15</tspan></text>
+        <text class="label label-small" x="369.26" y="61.44"><tspan x="369.26" dy="-3">25</tspan><tspan x="369.26" dy="12">яч.15</tspan></text>
+        
         <ellipse id="t4" class="interactive device" data-name="СТД-24" data-pair="knife-4" cx="611.60" cy="60.06" rx="18.43" ry="17.97" />
-        <text class="label label-small" x="611.60" y="60.06"><tspan x="611.60" dy="-4">24</tspan><tspan x="611.60" dy="9">яч.20</tspan></text>
+        <text class="label label-small" x="611.60" y="60.06"><tspan x="611.60" dy="-3">24</tspan><tspan x="611.60" dy="12">яч.20</tspan></text>
+        
         <ellipse id="t3" class="interactive device" data-name="СТД-23" data-pair="knife-3" cx="747.69" cy="61.14" rx="18.43" ry="17.97" />
-        <text class="label label-small" x="747.69" y="61.14"><tspan x="747.69" dy="-4">23</tspan><tspan x="747.69" dy="9">яч.21</tspan></text>
+        <text class="label label-small" x="747.69" y="61.14"><tspan x="747.69" dy="-3">23</tspan><tspan x="747.69" dy="12">яч.21</tspan></text>
+        
         <ellipse id="t8" class="interactive device" data-name="СТД-28" data-pair="knife-8" cx="233.81" cy="309.51" rx="18.43" ry="17.97" />
-        <text class="label label-small" x="233.81" y="309.51"><tspan x="233.81" dy="-4">28</tspan><tspan x="233.81" dy="9">яч.8</tspan></text>
+        <text class="label label-small" x="233.81" y="309.51"><tspan x="233.81" dy="-3">28</tspan><tspan x="233.81" dy="12">яч.8</tspan></text>
+        
         <ellipse id="t7" class="interactive device" data-name="СТД-27" data-pair="knife-7" cx="369.90" cy="310.58" rx="18.43" ry="17.97" />
-        <text class="label label-small" x="369.90" y="310.58"><tspan x="369.90" dy="-4">27</tspan><tspan x="369.90" dy="9">яч.9</tspan></text>
+        <text class="label label-small" x="369.90" y="310.58"><tspan x="369.90" dy="-3">27</tspan><tspan x="369.90" dy="12">яч.9</tspan></text>
+        
         <ellipse id="t2" class="interactive device" data-name="СТД-22" data-pair="knife-2" cx="612.25" cy="309.21" rx="18.43" ry="17.97" />
-        <text class="label label-small" x="612.25" y="309.21"><tspan x="612.25" dy="-4">22</tspan><tspan x="612.25" dy="9">яч.29</tspan></text>
+        <text class="label label-small" x="612.25" y="309.21"><tspan x="612.25" dy="-3">22</tspan><tspan x="612.25" dy="12">яч.29</tspan></text>
+        
         <ellipse id="t1" class="interactive device" data-name="СТД-21" data-pair="knife-1" cx="748.34" cy="310.29" rx="18.43" ry="17.97" />
-        <text class="label label-small" x="748.34" y="310.29"><tspan x="748.34" dy="-4">21</tspan><tspan x="748.34" dy="9">яч.30</tspan></text>
+        <text class="label label-small" x="748.34" y="310.29"><tspan x="748.34" dy="-3">21</tspan><tspan x="748.34" dy="12">яч.30</tspan></text>
 
         <!-- ТРАНСФОРМАТОРЫ -->
         <circle id="T2" class="interactive" data-name="Трансформатор 2Т" cx="301.24" cy="546.62" r="40.54" />
         <text class="label label-white" x="301.24" y="546.62">2Т</text>
+        
         <circle id="T1" class="interactive" data-name="Трансформатор 1Т" cx="690.96" cy="546.16" r="40.54" />
         <text class="label label-white" x="690.96" y="546.16">1Т</text>
 
-        <!-- НОЖИ -->
-        <g id="knife-4" class="interactive knife" data-name="Заземление 4" data-pair="t4"><path d="M 612.40,91.35 H 561.61" /><path d="M 564.48,88.93 V 114.27" /><path d="M 549.89,113.35 H 579.73" /><path d="m 555.88,123.49 c 5.99,0 11.98,0 17.97,0" /></g>
-        <g id="knife-3" class="interactive knife" data-name="Заземление 3" data-pair="t3"><path d="M 750.15,91.18 H 699.35" /><path d="M 702.23,88.75 V 114.10" /><path d="m 687.64,113.18 h 29.83" /><path d="m 693.63,123.31 c 5.99,0 11.98,0 17.97,0" /></g>
-        <g id="knife-6" class="interactive knife" data-name="Заземление 6" data-pair="t6"><path d="M 236.29,91.64 H 185.49" /><path d="M 188.37,89.21 V 114.56" /><path d="M 173.78,113.64 H 203.62" /><path d="m 179.77,123.78 c 5.99,0 11.98,0 17.97,0" /></g>
-        <g id="knife-5" class="interactive knife" data-name="Заземление 5" data-pair="t5"><path d="M 369.91,91.03 H 319.11" /><path d="M 321.98,88.60 V 113.95" /><path d="m 307.39,113.03 h 29.83" /><path d="m 313.38,123.17 c 5.99,0 11.98,0 17.97,0" /></g>
-        <g id="knife-2" class="interactive knife" data-name="Заземление 2" data-pair="t2"><path d="M 614.00,345.15 H 563.20" /><path d="m 566.08,342.72 v 25.34" /><path d="m 551.49,367.15 h 29.83" /><path d="m 557.48,377.28 c 5.99,0 11.98,0 17.97,0" /></g>
-        <g id="knife-1" class="interactive knife" data-name="Заземление 1" data-pair="t1"><path d="M 750.12,344.13 H 699.32" /><path d="m 702.19,341.71 v 25.34" /><path d="m 687.60,366.13 h 29.83" /><path d="m 693.59,376.27 c 5.99,0 11.98,0 17.97,0" /></g>
-        <g id="knife-8" class="interactive knife" data-name="Заземление 8" data-pair="t8"><path d="M 282.94,345.12 H 232.14" /><path d="m 281.01,342.70 v 25.34" /><path d="m 266.42,367.12 h 29.83" /><path d="m 272.41,377.26 c 5.99,0 11.98,0 17.97,0" /></g>
-        <g id="knife-7" class="interactive knife" data-name="Заземление 7" data-pair="t7"><path d="M 420.05,345.44 H 369.25" /><path d="m 418.13,343.02 v 25.34" /><path d="m 403.54,367.44 h 29.83" /><path d="m 409.53,377.58 c 5.99,0 11.98,0 17.97,0" /></g>
+        <!-- НОЖИ ЗАЗЕМЛЕНИЯ (Группы) -->
+        <g id="knife-4" class="interactive knife" data-name="Заземление 4" data-pair="t4">
+            <path d="M 612.40,91.35 H 561.61" /><path d="M 564.48,88.93 V 114.27" /><path d="M 549.89,113.35 H 579.73" /><path d="m 555.88,123.49 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+        <g id="knife-3" class="interactive knife" data-name="Заземление 3" data-pair="t3">
+            <path d="M 750.15,91.18 H 699.35" /><path d="M 702.23,88.75 V 114.10" /><path d="m 687.64,113.18 h 29.83" /><path d="m 693.63,123.31 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+        <g id="knife-6" class="interactive knife" data-name="Заземление 6" data-pair="t6">
+            <path d="M 236.29,91.64 H 185.49" /><path d="M 188.37,89.21 V 114.56" /><path d="M 173.78,113.64 H 203.62" /><path d="m 179.77,123.78 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+        <g id="knife-5" class="interactive knife" data-name="Заземление 5" data-pair="t5">
+            <path d="M 369.91,91.03 H 319.11" /><path d="M 321.98,88.60 V 113.95" /><path d="m 307.39,113.03 h 29.83" /><path d="m 313.38,123.17 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+        <g id="knife-2" class="interactive knife" data-name="Заземление 2" data-pair="t2">
+            <path d="M 614.00,345.15 H 563.20" /><path d="m 566.08,342.72 v 25.34" /><path d="m 551.49,367.15 h 29.83" /><path d="m 557.48,377.28 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+        <g id="knife-1" class="interactive knife" data-name="Заземление 1" data-pair="t1">
+            <path d="M 750.12,344.13 H 699.32" /><path d="m 702.19,341.71 v 25.34" /><path d="m 687.60,366.13 h 29.83" /><path d="m 693.59,376.27 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+        <g id="knife-8" class="interactive knife" data-name="Заземление 8" data-pair="t8">
+            <path d="M 282.94,345.12 H 232.14" /><path d="m 281.01,342.70 v 25.34" /><path d="m 266.42,367.12 h 29.83" /><path d="m 272.41,377.26 c 5.99,0 11.98,0 17.97,0" />
+        </g>
+        <g id="knife-7" class="interactive knife" data-name="Заземление 7" data-pair="t7">
+            <path d="M 420.05,345.44 H 369.25" /><path d="m 418.13,343.02 v 25.34" /><path d="m 403.54,367.44 h 29.83" /><path d="m 409.53,377.58 c 5.99,0 11.98,0 17.97,0" />
+        </g>
     </svg>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const devices = document.querySelectorAll('.interactive');
-        const errorTooltip = document.getElementById('tooltip');
-        const infoTooltip = document.getElementById('info-tooltip');
-        const STORAGE_KEY = 'schema_state_v1';
-        let tooltipTimeout;
-
-        // Звуки
-        const sounds = {
-            click: new Audio("sounds/click.mp3"),
-            error: new Audio("sounds/error.mp3")
-        };
-        Object.values(sounds).forEach(s => { s.volume = 0.4; s.load(); });
-        function playSound(name) {
-            if (sounds[name]) sounds[name].cloneNode(true).play().catch(() => {});
-        }
-
-        function loadState() {
-            const savedState = localStorage.getItem(STORAGE_KEY);
-            if (savedState) {
-                try {
-                    const stateObj = JSON.parse(savedState);
-                    for (const [id, isActive] of Object.entries(stateObj)) {
-                        if (isActive) {
-                            const el = document.getElementById(id);
-                            if (el) el.classList.add('active');
+    (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            const allInteractive = document.querySelectorAll('.interactive');
+            const errorTooltip = document.getElementById('tooltip');
+            const infoTooltip = document.getElementById('info-tooltip');
+            const STORAGE_KEY = 'schema_state_v2';
+            let activeTimeout = null;
+            
+            // Инициализация звуков, но с защитой от ошибок авто-политики
+            const sounds = {
+                click: null,
+                error: null
+            };
+            try {
+                sounds.click = new Audio("data:audio/wav;base64,U3RlcmVvIG5vIGF1ZG8gYnV0IGNvbXBhY3QgZmFrZSBzb3VuZA==");
+                sounds.error = new Audio("data:audio/wav;base64,//+4c2FtcGxlIGZha2U=");
+            } catch(e) { /* без звуков */ }
+            
+            function playSound(name) {
+                if (sounds[name] && sounds[name].cloneNode) {
+                    try {
+                        const clone = sounds[name].cloneNode();
+                        clone.volume = 0.3;
+                        clone.play().catch(()=>{});
+                    } catch(e) {}
+                }
+            }
+            
+            // Загрузка сохранённого состояния
+            function loadState() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    try {
+                        const stateMap = JSON.parse(saved);
+                        for (const [id, active] of Object.entries(stateMap)) {
+                            if (active) {
+                                const element = document.getElementById(id);
+                                if (element && !element.classList.contains('active')) {
+                                    element.classList.add('active');
+                                }
+                            }
+                        }
+                    } catch(e) { console.warn(e); }
+                }
+            }
+            
+            function saveState() {
+                const state = {};
+                allInteractive.forEach(el => {
+                    if (el.id) state[el.id] = el.classList.contains('active');
+                });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            }
+            
+            // Обновление блокировок: если СТД активен (device) — блокируем связанный нож (knife)
+            function updateLocks() {
+                // Снимаем все блокировки
+                document.querySelectorAll('.locked').forEach(el => el.classList.remove('locked'));
+                // Для каждого активного устройства проверяем data-pair
+                allInteractive.forEach(el => {
+                    if (el.classList.contains('active')) {
+                        const pairId = el.getAttribute('data-pair');
+                        if (pairId) {
+                            const pairEl = document.getElementById(pairId);
+                            if (pairEl) pairEl.classList.add('locked');
+                        }
+                        // Также дополнительная симметрия: если активен нож, блокируем его устройство?
+                        // По логике мнемосхемы: активные заземления блокируют возможность отключения СТД?
+                        // но для простоты оставим прямое правило: "активное устройство -> блокирует парный нож"
+                        // Дополнительно: если активен нож (заземление), то блокируем СТД?
+                        if (el.classList.contains('knife')) {
+                            const targetPair = el.getAttribute('data-pair');
+                            if(targetPair) {
+                                const deviceEl = document.getElementById(targetPair);
+                                if(deviceEl) deviceEl.classList.add('locked');
+                            }
                         }
                     }
-                } catch (e) {}
+                });
+                
+                // Дополнительная блокировка между трансформаторами и выключателями по необходимости
+                // Расширение логики: активные выключатели q5/q6 блокируют трансформатор 2Т и т.д.
+                // согласно семантике схемы
+                const t2 = document.getElementById('T2');
+                const t1 = document.getElementById('T1');
+                const q5 = document.getElementById('q5');
+                const q6 = document.getElementById('q6');
+                const q7 = document.getElementById('q7');
+                const q8 = document.getElementById('q8');
+                if(t2 && (q5?.classList.contains('active') || q6?.classList.contains('active'))) {
+                    t2.classList.add('locked');
+                } else if(t2 && t2.classList.contains('locked')) t2.classList.remove('locked');
+                if(t1 && (q7?.classList.contains('active') || q8?.classList.contains('active'))) {
+                    t1.classList.add('locked');
+                } else if(t1 && t1.classList.contains('locked')) t1.classList.remove('locked');
             }
-        }
-
-        function saveState() {
-            const stateObj = {};
-            devices.forEach(el => stateObj[el.id] = el.classList.contains('active'));
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(stateObj));
-        }
-
-        function updateLocks() {
-            document.querySelectorAll('.locked').forEach(el => el.classList.remove('locked'));
-            devices.forEach(el => {
-                if (el.classList.contains('active')) {
-                    const pairId = el.getAttribute('data-pair');
-                    if (pairId) {
-                        const pairEl = document.getElementById(pairId);
-                        if (pairEl) pairEl.classList.add('locked');
+            
+            function formatInfo(element) {
+                const name = element.getAttribute('data-name') || element.id.toUpperCase();
+                const isLock = element.classList.contains('locked');
+                const isActive = element.classList.contains('active');
+                let statusText = '';
+                if (isLock) statusText = '<span class="status-locked">ЗАБЛОКИРОВАНО</span>';
+                else if (isActive) statusText = '<span class="status-on">ВКЛЮЧЕНО</span>';
+                else statusText = '<span class="status-off">ОТКЛЮЧЕНО</span>';
+                return `<span class="info-title">${name}</span> <span class="info-status">${statusText}</span>`;
+            }
+            
+            function showInfo(el, clientX, clientY) {
+                if (activeTimeout) clearTimeout(activeTimeout);
+                if (!infoTooltip) return;
+                infoTooltip.innerHTML = formatInfo(el);
+                infoTooltip.style.left = clientX + 'px';
+                infoTooltip.style.top = (clientY - 20) + 'px';
+                infoTooltip.style.opacity = '1';
+                activeTimeout = setTimeout(() => {
+                    if (infoTooltip) infoTooltip.style.opacity = '0';
+                }, 1800);
+            }
+            
+            function showError(x, y, message = "Недоступно: включена смежная цепь") {
+                if (!errorTooltip) return;
+                errorTooltip.textContent = message;
+                errorTooltip.style.left = x + 'px';
+                errorTooltip.style.top = (y - 25) + 'px';
+                errorTooltip.style.opacity = '1';
+                playSound('error');
+                setTimeout(() => {
+                    if (errorTooltip) errorTooltip.style.opacity = '0';
+                }, 1400);
+            }
+            
+            // Обработчик кликов для всех элементов
+            allInteractive.forEach(el => {
+                el.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    const x = event.clientX;
+                    const y = event.clientY;
+                    if (this.classList.contains('locked')) {
+                        showError(x, y, "⛔ Заблокировано: смежный аппарат активен");
+                        return;
                     }
-                }
+                    // переключение состояния
+                    this.classList.toggle('active');
+                    playSound('click');
+                    saveState();
+                    updateLocks();
+                    showInfo(this, x, y);
+                });
+                
+                // Тач и мышь для показа тултипа при наведении
+                const showOnHover = (e) => {
+                    if (!e.clientX || !e.clientY) return;
+                    showInfo(el, e.clientX, e.clientY);
+                };
+                el.addEventListener('mouseenter', showOnHover);
+                el.addEventListener('touchstart', (e) => {
+                    // для сенсорных: показываем тултип при касании без переключения? 
+                    // Но контекстный показ, делаем легкий таймер, без конфликта клика
+                    const touch = e.touches[0];
+                    if (touch) showInfo(el, touch.clientX, touch.clientY);
+                });
+                el.addEventListener('mousemove', (e) => {
+                    if (infoTooltip.style.opacity === '1') {
+                        infoTooltip.style.left = e.clientX + 'px';
+                        infoTooltip.style.top = (e.clientY - 20) + 'px';
+                        if (activeTimeout) clearTimeout(activeTimeout);
+                        activeTimeout = setTimeout(() => { if(infoTooltip) infoTooltip.style.opacity = '0'; }, 1800);
+                    }
+                });
+                el.addEventListener('mouseleave', () => {
+                    if (activeTimeout) clearTimeout(activeTimeout);
+                    if (infoTooltip) infoTooltip.style.opacity = '0';
+                });
             });
-        }
-
-        function getInfoText(el) {
-            const name = el.getAttribute('data-name') || el.id.toUpperCase();
-            const isLocked = el.classList.contains('locked');
-            const isActive = el.classList.contains('active');
-            let statusHtml = '';
-            if (isLocked) statusHtml = '<span class="status-locked">ЗАБЛОКИРОВАНО</span>';
-            else if (isActive) statusHtml = '<span class="status-on">ВКЛЮЧЕНО</span>';
-            else statusHtml = '<span class="status-off">ОТКЛЮЧЕНО</span>';
-            return `<span class="info-title">${name}</span><span class="info-status">Статус: ${statusHtml}</span>`;
-        }
-
-        function showInfoTooltip(el, x, y) {
-            clearTimeout(tooltipTimeout);
-            infoTooltip.innerHTML = getInfoText(el);
-            infoTooltip.style.left = x + 'px';
-            infoTooltip.style.top = (y - 10) + 'px';
-            infoTooltip.style.opacity = '1';
-            tooltipTimeout = setTimeout(() => infoTooltip.style.opacity = '0', 1500);
-        }
-
-        devices.forEach(function(el) {
-            el.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (this.classList.contains('locked')) {
-                    errorTooltip.textContent = "Недоступно: включена смежная цепь";
-                    errorTooltip.style.left = e.clientX + 'px'; errorTooltip.style.top = e.clientY + 'px';
-                    errorTooltip.style.opacity = '1';
-                    playSound('error');
-                    setTimeout(() => errorTooltip.style.opacity = '0', 1500);
-                    return;
-                }
-                this.classList.toggle('active');
-                playSound('click');
-                saveState();
-                updateLocks();
-                showInfoTooltip(this, e.clientX, e.clientY);
+            
+            // Загрузка сост. и 1-е обновление замков
+            loadState();
+            updateLocks();
+            
+            // Ресайз/ориентация - принудительно пересчитать тултипы, чтобы не вылезали за край
+            window.addEventListener('resize', () => {
+                if (infoTooltip) infoTooltip.style.opacity = '0';
+                if (errorTooltip) errorTooltip.style.opacity = '0';
             });
-
-            el.addEventListener('mouseenter', function(e) { showInfoTooltip(this, e.clientX, e.clientY); });
-            el.addEventListener('mousemove', function(e) {
-                if (infoTooltip.style.opacity === '1') {
-                    infoTooltip.style.left = e.clientX + 'px';
-                    infoTooltip.style.top = (e.clientY - 10) + 'px';
-                    clearTimeout(tooltipTimeout);
-                    tooltipTimeout = setTimeout(() => infoTooltip.style.opacity = '0', 1500);
-                }
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    if (infoTooltip) infoTooltip.style.opacity = '0';
+                    if (errorTooltip) errorTooltip.style.opacity = '0';
+                }, 30);
             });
-            el.addEventListener('mouseleave', () => { clearTimeout(tooltipTimeout); infoTooltip.style.opacity = '0'; });
+            
+            // Улучшение восприятия: чтобы SVG мог масштабироваться жестами (по умолчанию)
+            const svgElem = document.getElementById('main-svg');
+            if (svgElem) {
+                svgElem.style.touchAction = 'pan-x pan-y pinch-zoom';
+            }
         });
-
-        loadState();
-        updateLocks();
-    });
+    })();
 </script>
-
 </body>
 </html>
-
