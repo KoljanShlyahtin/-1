@@ -19,10 +19,8 @@
             align-items: center; 
             width: 100vw; 
             height: 100vh; 
-            padding-top: 60px; /* Чуть меньше отступ, так как кнопка одна */
-            padding-bottom: 10px;
-            padding-left: 5px;
-            padding-right: 5px;
+            /* Убрали лишний отступ, схема теперь больше */
+            padding: 5px; 
             position: relative;
         }
 
@@ -55,24 +53,6 @@
         .label-small { font-size: 7px; }
         .label-white { fill: #333; font-size: 12px; }
 
-        /* Панель управления - теперь проще */
-        .control-panel {
-            position: absolute;
-            top: 10px; 
-            right: 10px; /* Прижата к правому углу */
-            z-index: 200;
-        }
-
-        .btn-reset {
-            background: #d32f2f; color: white; border: none;
-            padding: 6px 12px; border-radius: 20px; cursor: pointer;
-            font-size: 11px; font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-        }
-        .btn-reset:hover { background: #b71c1c; transform: scale(1.05); }
-        .btn-reset:active { transform: scale(0.95); }
-
         /* Тултипы */
         #tooltip {
             position: absolute; background: #d32f2f; color: white; padding: 5px 10px;
@@ -99,10 +79,7 @@
     <div id="tooltip">Блокировка!</div>
     <div id="info-tooltip"></div>
 
-    <!-- Только кнопка сброса справа сверху -->
-    <div class="control-panel">
-        <button class="btn-reset" onclick="resetSchema()">Сброс</button>
-    </div>
+    <!-- Кнопки убраны -->
 
     <svg id="main-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
         <rect width="100%" height="100%" fill="#e8e4d9" />
@@ -278,13 +255,6 @@
             });
             el.addEventListener('mouseleave', () => { clearTimeout(tooltipTimeout); infoTooltip.style.opacity = '0'; });
         });
-
-        window.resetSchema = function() {
-            if(confirm('Сбросить все состояния?')) {
-                localStorage.removeItem('schema_state_v1');
-                location.reload();
-            }
-        };
 
         loadState();
         updateLocks();
